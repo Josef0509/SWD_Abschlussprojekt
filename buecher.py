@@ -58,7 +58,7 @@ def anlegen():
      
     container.text_input(label="Name", key="key_name", placeholder="Name des Buches", help="Bitte hier Namen des Buches eingeben das Sie anlegen wollen!")
     container.number_input(label="Seitenanzahl", key="key_seitenanzahl", placeholder="Seitenanzahl", help="Bitte hier die Seitenanzahl des Buches eingeben das Sie anlegen wollen!", step=1, min_value=0)
-
+    container.toggle("Autonumerierung", key="key_autonumerierung", value=True, help="Klicken Sie hier um die Spalten bei der Benotung automatisch zu nummerieren!")
     container.button(label="Speichern", on_click=button_anlegen_clicked, help="Klicken Sie hier um das Buch zu speichern!")
 
         
@@ -69,6 +69,8 @@ def bearbeiten():
     container.text_input(label="Name", key="key_name_neu", placeholder="neuer Name des Buches", value=st.session_state.key_ausg_buch, help="Bitte hier den neuen Namen des Buches eingeben!")
     #value aus der datenbank holen: Seitenanzahl des ausgewählten Buches
     container.number_input(label="Seitenanzahl", key="key_seitenanzahl_neu", placeholder="neue Seitenanzahl", help="Bitte hier die neue Seitenanzahl des Buches eingeben!", step=1, min_value=0)
+    container.toggle("Autonumerierung", key="key_autonumerierung", value=True, help="Klicken Sie hier um die Spalten bei der Benotung automatisch zu nummerieren!")
+
 
     container.button(label="Löschen", on_click=button_loeschen_clicked, help="Klicken Sie hier um das Buch zu löschen!")
     container.button(label="Speichern", on_click=button_speichern_clicked, help="Klicken Sie hier um die Änderungen zu speichern!")
