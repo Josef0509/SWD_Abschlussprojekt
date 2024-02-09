@@ -122,9 +122,4 @@ def bearbeiten():
     container.button(label="Speichern", on_click=button_speichern_clicked, help="Klicken Sie hier um die Änderungen zu speichern!")
 
 
-if st.session_state.showSession == 1:
-    uebersicht()
-elif st.session_state.showSession == 2:
-    anlegen()
-else:
-    bearbeiten()
+ 

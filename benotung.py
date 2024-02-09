@@ -10,13 +10,11 @@ if "showSession" not in st.session_state:
     st.session_state.showSession = 1
 
 add_page_title()
+container = st.container()
+
 
 cl1, cl2, cl3 = st.columns([0.15, 0.15, 0.7])
 
-button1_ph = cl1.button("Übersicht", on_click=lambda: st.session_state.__setitem__("showSession", 1),
-                        help="Klicken Sie hier um zur Benotungsübersicht zu gelangen!")
-
-container = st.container()
 
 
 
@@ -41,18 +39,30 @@ def button_export_clicked():
 
 
     if seitenanz_aus_DB:
-        container.write(f"Seitenanzahl: {seitenanz_aus_DB}")
-        df = pd.DataFrame(np.random.randn(10, seitenanz_aus_DB), columns=[f"S. {i}" for i in range(1, seitenanz_aus_DB + 1)])
+        #container.write(f"Seitenanzahl: {seitenanz_aus_DB}")
+        #df = pd.DataFrame(np.random.randn(10, seitenanz_aus_DB), columns=[f"S. {i}" for i in range(1, seitenanz_aus_DB + 1)])
 
+        
+       # Open file explorer for user to choose file path
+        file_path = "C:\\Users\\sandr\\OneDrive\\Desktop\\test\\export.csv"
 
-        df.to_csv("export.csv", sep='\t')
+        # Export the DataFrame to the specified file path
+        if st.button("Export to CSV"):
+            df.to_csv(file_path, sep='\t')
+            st.success(f"Data successfully exported to {file_path}")
 
-        st.success("Erfolgsmeldung: Daten wurden erfolgreich exportiert!")
+       # df.to_csv("export.csv", sep='\t')
+
+        #st.success("Erfolgsmeldung: Daten wurden erfolgreich exportiert!")
         
     else:
         container.write("Das Buch hat keine Seitenanzahl.")
+    
+    button1_ph = cl1.button("Übersicht", on_click=lambda: st.session_state.__setitem__("showSession", 1),
+                        help="Klicken Sie hier um zur Benotungsübersicht zu gelangen!")
 
-    st.success("Erfolgsmeldung")
+
+    
 
 
 
