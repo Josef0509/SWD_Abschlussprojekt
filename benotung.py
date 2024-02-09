@@ -45,7 +45,7 @@ def button_export_clicked():
         df = pd.DataFrame(np.random.randn(10, seitenanz_aus_DB), columns=[f"S. {i}" for i in range(1, seitenanz_aus_DB + 1)])
 
 
-        df.to_csv("export.csv", index=False)
+        df.to_csv("export.csv", sep='\t')
 
         st.success("Erfolgsmeldung: Daten wurden erfolgreich exportiert!")
         
