@@ -14,6 +14,10 @@ class DB:
             answer = self.c.fetchall()
         return answer
     
+    def update_data(self, data: str):
+        with self.conn:
+            self.c.execute(data)
+    
     def __del__(self):
         self.conn.close()
         
