@@ -44,6 +44,8 @@ def uebersicht():
     if seitenanz_aus_DB:
         container.write(f"Seitenanzahl: {seitenanz_aus_DB}")
 
+
+
         # Fetch kid names and create a DataFrame with random data
         kids = db.query("SELECT firstname, lastname FROM Kid")
 
@@ -52,105 +54,63 @@ def uebersicht():
             kids = [f"{kid[0]} {kid[1]}" for kid in kids]
             
 
+
+
+
             df = pd.DataFrame(columns=[f"S. {i}" for i in range(1, seitenanz_aus_DB + 1)])
             df.insert(0, 'Kid Name', kids)  # Insert Kid Names as the first column
 
 
-            for i in range(1, seitenanz_aus_DB + 1):
-                df.insert(i, f"S. {i} Link", [f"https://www.google.com/search?q={kid}" for kid in kids])
-
             print(df) 
-            '''
-            st.data_editor(
-                data=df,
-                column_config={
-                    "S. 1 Link": st.column_config.LinkColumn(
-                        "S. 1 Link",
-                        help="Link to Google",
-                        display_text="Link",
-                        width="small",
-                        required=True,
-                    ),
-                    "S. 2 Link": st.column_config.LinkColumn(
-                        "S. 2 Link",
-                        help="Link to Google",
-                        display_text="Link",
-                        width="small",
-                        required=True,
-                    ),
-                    "S. 3 Link": st.column_config.LinkColumn(
-                        "S. 3 Link",
-                        help="Link to Google",
-                        display_text="Link",
-                        width="small",
-                        required=True,
-                    ),
-                    "S. 4 Link": st.column_config.LinkColumn(
-                        "S. 4 Link",
-                        help="Link to Google",
-                        display_text="Link",
-                        width="small",
-                        required=True,
-                    ),
-                    "S. {i} Link": st.column_config.LinkColumn(
-                        "S. {i} Link",
-                        help="Link to Google",
-                        display_text="Link",
-                        width="small",
-                        required=True,
-                    )
-                },
-                hide_index=True
+           
+
+            df_with_selections = df.copy()
+            df_with_selections.insert(0, "Select", False)
+
+            # Get dataframe row-selections from user with st.data_editor
+            edited_df = st.data_editor(
+                df_with_selections,
+                hide_index=True,
+                column_config={"Select": st.column_config.CheckboxColumn(required=True)},
+                disabled=df.columns,
             )
-            '''
+            selected_rows = edited_df[edited_df.Select]
+            selection = selected_rows.drop('Select', axis=1)
+            print(selection)
 
-            st.data_editor(
-                data=df,
-                column_config={
-                    f"S. {i} Link": st.column_config.LinkColumn(
-                        f"S. {i} Link",
-                        help="Link to Google",
-                        display_text=f"S. {i} Link",
-                        width="small",
-                        required=True,
-                    )
-                    for i in range(1, seitenanz_aus_DB + 1)
-                },
-                hide_index=True
+            st.write("Your selection:")
+            st.write(selection)
+
+
+            #ändere reihen und spalten
+            selection = selection.transpose()
+            selection.insert(0, "Select", False)
+
+            #erstelle ein data editor für die ausgewählten Seiten
+            edited_df_page = st.data_editor(
+                selection,
+                hide_index=True,
+                column_config={"Select": st.column_config.CheckboxColumn(required=True)},
+                disabled=selection.columns,
+                width=1000,
+                
             )
-
-
-
-
-
-
+            selected_rows_page = edited_df_page[edited_df_page.Select]
+            selection = selected_rows_page.drop('Select', axis=1)
+            print(selection)
+            st.write("Your selection:")
+            st.write(selection)
 
 
             
-            ''''
-            st.data_editor(
-                data=df,
-                column_config={
+        
 
-                    f"S. {i}": st.column_config.SelectboxColumn(
-                        f"S. {i}",
-                        help="Selectbox for grade",
-                        width="small",
-                        options=["Klicken"],
-                        required=True,
-                    ) for i in range(1, seitenanz_aus_DB + 1)
-                },
-                hide_index=True,
-            )'''
-
-
-
-            if st.button("Speichern"):
-                #iteriere durch den data editor und speichere die Daten in die Datenbank
-                for row in df.itertuples():
-                    all_data = df.iloc[row]
-                    st.success(f"{all_data} wurde erfolgreich gespeichert!")
-                    #st.success(f"funkt")
+        if st.button("Speichern"):
+            #iteriere durch den data editor und speichere die Daten in die Datenbank
+            for row in df.itertuples():
+                all_data = df.iloc[row]
+                st.success(f"{all_data} wurde erfolgreich gespeichert!")
+                #st.success(f"funkt")
                      
 
 

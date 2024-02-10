@@ -1,24 +1,39 @@
 import streamlit as st
+import numpy as np
 import pandas as pd
 
-# Beispiel-Datenframe
-data = {'Name': ['Alice', 'Bob', 'Charlie'],
-        'Alter': [25, 30, 35],
-        'Stadt': ['Berlin', 'München', 'Hamburg']}
+from st_aggrid import AgGrid, DataReturnMode, GridUpdateMode, GridOptionsBuilder, JsCode
 
-df = pd.DataFrame(data)
+@st.cache()
+def generate_df():
+    df = pd.DataFrame(
+        np.random.randint(0, 100, 30).reshape(-1, 3), columns=list("abc")
+    )
+    return df
 
-# Haupttabelle anzeigen
-main_table = st.table(df)
+data = generate_df()
 
-# Index der ausgewählten Zelle
-selected_cell = st.table({})
 
-# Überprüfen, ob eine Zelle in der Haupttabelle ausgewählt wurde
-if main_table.button('Zelle auswählen'):
-    selected_cell = st.table({'Selected Cell': [main_table.selected_row, main_table.selected_col]})
+gb = GridOptionsBuilder.from_dataframe(data)
+gb.configure_columns(list('abc'), editable=True)
 
-# Überprüfen, ob eine Detailseite angezeigt werden soll
-if selected_cell:
-    # Hier können Sie die Detailseite basierend auf den ausgewählten Zellinformationen erstellen
-    st.write(f'Detailseite für Zelle: {selected_cell}')
+
+js = JsCode("""
+function(e) {
+    let api = e.api;
+    let rowIndex = e.rowIndex;
+    let col = e.column.colId;
+    
+    let rowNode = api.getDisplayedRowAtIndex(rowIndex);
+    
+    console.log("column index: " + col + ", row index: " + rowIndex);
+};
+""")
+
+gb.configure_grid_options(onCellClicked=js)
+gb.configure_selection(selection_mode ='single')
+go = gb.build()
+
+return_ag = AgGrid(data, gridOptions=go, allow_unsafe_jscode=True, reload_data=False, update_mode=GridUpdateMode.SELECTION_CHANGED)
+
+print(return_ag)
