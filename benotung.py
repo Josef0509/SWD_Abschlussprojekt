@@ -56,8 +56,24 @@ def uebersicht():
             df.insert(0, 'Kid Name', kids)  # Insert Kid Names as the first column
 
 
+            for i in range(1, seitenanz_aus_DB + 1):
+                df.insert(i+2, f"S. {i} Link", [f"https://www.google.com/search?q={kid}" for kid in kids])
 
             
+
+                st.data_editor(
+                    data=df,
+                    column_config={
+                            f"S. {i} Link": st.column_config.LinkColumn(
+                           f"S. {i}",
+                            help="Link to the page",
+                            display_text="Link",
+                            )
+                    }
+                )
+
+            
+            ''''
             st.data_editor(
                 data=df,
                 column_config={
@@ -71,8 +87,7 @@ def uebersicht():
                     ) for i in range(1, seitenanz_aus_DB + 1)
                 },
                 hide_index=True,
-            )
-            
+            )'''
 
 
 
