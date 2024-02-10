@@ -57,20 +57,74 @@ def uebersicht():
 
 
             for i in range(1, seitenanz_aus_DB + 1):
-                df.insert(i+2, f"S. {i} Link", [f"https://www.google.com/search?q={kid}" for kid in kids])
+                df.insert(i, f"S. {i} Link", [f"https://www.google.com/search?q={kid}" for kid in kids])
 
-            
+            print(df) 
+            '''
+            st.data_editor(
+                data=df,
+                column_config={
+                    "S. 1 Link": st.column_config.LinkColumn(
+                        "S. 1 Link",
+                        help="Link to Google",
+                        display_text="Link",
+                        width="small",
+                        required=True,
+                    ),
+                    "S. 2 Link": st.column_config.LinkColumn(
+                        "S. 2 Link",
+                        help="Link to Google",
+                        display_text="Link",
+                        width="small",
+                        required=True,
+                    ),
+                    "S. 3 Link": st.column_config.LinkColumn(
+                        "S. 3 Link",
+                        help="Link to Google",
+                        display_text="Link",
+                        width="small",
+                        required=True,
+                    ),
+                    "S. 4 Link": st.column_config.LinkColumn(
+                        "S. 4 Link",
+                        help="Link to Google",
+                        display_text="Link",
+                        width="small",
+                        required=True,
+                    ),
+                    "S. {i} Link": st.column_config.LinkColumn(
+                        "S. {i} Link",
+                        help="Link to Google",
+                        display_text="Link",
+                        width="small",
+                        required=True,
+                    )
+                },
+                hide_index=True
+            )
+            '''
 
-                st.data_editor(
-                    data=df,
-                    column_config={
-                            f"S. {i} Link": st.column_config.LinkColumn(
-                           f"S. {i}",
-                            help="Link to the page",
-                            display_text="Link",
-                            )
-                    }
-                )
+            st.data_editor(
+                data=df,
+                column_config={
+                    f"S. {i} Link": st.column_config.LinkColumn(
+                        f"S. {i} Link",
+                        help="Link to Google",
+                        display_text=f"S. {i} Link",
+                        width="small",
+                        required=True,
+                    )
+                    for i in range(1, seitenanz_aus_DB + 1)
+                },
+                hide_index=True
+            )
+
+
+
+
+
+
+
 
             
             ''''
