@@ -12,6 +12,10 @@ if "showSession" not in st.session_state:
 add_page_title()
 
 cl1, cl2, cl3 = st.columns([0.15, 0.15, 0.7])
+button1_ph = cl1.button("Übersicht", on_click=lambda: st.session_state.__setitem__("showSession", 1),
+                         help="Klicken Sie hier um zur Übersicht zu gelangen!")
+button2_ph = cl2.button("Detailansicht", on_click=lambda: st.session_state.__setitem__("showSession", 2),
+                        help="Klicken Sie hier um die Detailansicht zu sehen!")
 
 
 container = st.container()
@@ -118,69 +122,8 @@ def uebersicht():
             
 
 
-            
-        
 
-        if st.button("Detailansicht"):
-            #print(selection)
-            st.write("Your selection:")
-            st.write(selection)
-
-            #lade die daten für die detailansicht, dazu kind, buch und seite info aus der datenbank
-            #und zeige die detailansicht
-
-
-
-            print(selected_kid)
-            print(selected_page)
-
-            #get the info for the selected kid and page
-            
-            kid_ids = []
-            for kid_name in selected_kid:
-                kid_id = db.query("SELECT kidID FROM Kid WHERE firstname = ?", (kid_name,))
-                st.write("kid_id")
-                st.header(kid_id)
-                
-
-                for book in selected_book:
-                    book_id = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
-                    st.write("Book_id")
-                    st.header(book_id)
-
-                    for page in selected_page:
-                        grade = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, page))[0][0]
-                        st.write("Grade")
-                        st.header(grade)
-
-                        comment = db.query("SELECT comment FROM Page WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, page))[0][0]
-                        st.write("Comment")
-                        st.header(comment)
-
-                        weight = db.query("SELECT weight FROM Page WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, page))[0][0]
-                        st.write("weight")
-                        st.header(weight)
-
-                        date = db.query("SELECT date FROM Page WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, page))[0][0]
-                        st.write("date")
-                        st.header(date)
-            
-
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # Open file explorer for user to choose file path
+            # Open file explorer for user to choose file path
         file_path = "C:\\Users\\sandr\\OneDrive\\Desktop\\test\\export.csv"
 
         # Export the DataFrame to the specified file path
@@ -192,6 +135,83 @@ def uebersicht():
     else:
         container.write("Das Buch hat keine Seitenanzahl.")
 
+    return selected_kid, selected_book, selected_page, seitenanz_aus_DB
+            
+    
+
+
+
+
+#--------------------------------------------------------------------------------------------------------------------------------------
+def detailansicht(selected_kid, selected_book, selected_page):
+    db = DB()
+    
+    print(selected_book)
+    print(selected_kid)
+    print(selected_page)
+
+    #get the info for the selected kid and page
+    
+    #selected _page aus liste entfernen
+    selected_page = selected_page[0]
+    
+    for kid_name in selected_kid:
+        kid_id_result = db.query("SELECT kidID FROM Kid WHERE firstname = ?", (kid_name,))
+        
+        if kid_id_result:
+            kid_id = kid_id_result[0][0]
+            st.write("kid_id")
+            st.header(kid_id)
+            
+
+            book_id_result = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
+            
+            if book_id_result:
+                book_id = book_id_result[0][0]
+                st.write("Book_id")
+                st.header(book_id)
+
+                grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id,selected_page))
+                print(grade_result)
+                st.write("Grade")
+                st.header(grade_result)
+
+                comment_result = db.query("SELECT comment FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+                print(comment_result)
+                st.write("Comment")
+                st.header(comment_result)
+
+
+
+                weight_result = db.query("SELECT weight FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+                print(weight_result)
+                st.write("Weight")
+                st.header(weight_result)
+
+
+                date_result = db.query("SELECT date FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+                print(date_result)
+                st.write("Date")
+                st.header(date_result)
+
+
+
+            else:
+                st.warning(f"No book found for {selected_book}")
+        else:
+            st.warning(f"No kid found for {kid_name}")
+        
+
+        
+
+
+
+
+
+
+
+        
+
 
 
 
@@ -200,6 +220,9 @@ def uebersicht():
 if st.session_state.showSession == 1:
     uebersicht()
 
+elif st.session_state.showSession == 2:
+    selected_kid, selected_book, selected_page, seitenanz_aus_DB = uebersicht()
+    detailansicht(selected_kid, selected_book, selected_page)
 
 else:
     pass
