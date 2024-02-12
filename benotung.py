@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from db import DB
 from tkinter import filedialog
+import datetime
 
 # Initialize session state
 if "showSession" not in st.session_state:
@@ -19,7 +20,14 @@ button2_ph = cl2.button("Detailansicht", on_click=lambda: st.session_state.__set
 
 
 container = st.container()
+db = DB()
 
+
+buecher = db.query("SELECT name FROM Book")  # returns tuples
+buecher = [buch[0] for buch in buecher] if buecher else []
+
+selected_book = container.selectbox(label="Buch auswählen", key="key_ausg_Buch", index=0, options=buecher,
+                                    help="Bitte hier das Buch auswählen das Sie anzeigen wollen!")
 
 
 
@@ -29,11 +37,7 @@ def uebersicht():
     st.header("Benotungsübersicht")
     db = DB()
 
-    buecher = db.query("SELECT name FROM Book")  # returns tuples
-    buecher = [buch[0] for buch in buecher] if buecher else []
-
-    selected_book = container.selectbox(label="Buch auswählen", key="key_ausg_Buch", index=0, options=buecher,
-                                        help="Bitte hier das Buch auswählen das Sie anzeigen wollen!")
+    
 
     seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
     seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
@@ -87,6 +91,10 @@ def uebersicht():
             selected_kid = [kid.split()[0] for kid in selected_kid]
             print(selected_kid)
 
+            st.session_state.key_ausg_kid = selected_kid
+
+            
+
             
 
             #transponiere die Auswahl und füge die Spalte "Select" hinzu
@@ -116,10 +124,10 @@ def uebersicht():
             #konvertiere die seiten in int
             selected_page = [int(page) for page in selected_page]
 
+            st.session_state.key_ausg_page = selected_page
 
             print(selected_page)
-            st.write(selected_page)
-            
+                        
 
 
 
@@ -143,63 +151,143 @@ def uebersicht():
 
 
 #--------------------------------------------------------------------------------------------------------------------------------------
-def detailansicht(selected_kid, selected_book, selected_page):
+def detailansicht():
+
+
     db = DB()
     
+
+    selected_book = st.session_state.key_ausg_Buch
+    selected_kid = st.session_state.key_ausg_kid
+    selected_page = st.session_state.key_ausg_page
+
+
     print(selected_book)
     print(selected_kid)
-    print(selected_page)
+    
 
     #get the info for the selected kid and page
     
     #selected _page aus liste entfernen
     selected_page = selected_page[0]
+
+
+    
     
     for kid_name in selected_kid:
         kid_id_result = db.query("SELECT kidID FROM Kid WHERE firstname = ?", (kid_name,))
         
         if kid_id_result:
             kid_id = kid_id_result[0][0]
-            st.write("kid_id")
-            st.header(kid_id)
+            #st.write("kid_id")
+            #st.header(kid_id)
             
 
             book_id_result = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
             
             if book_id_result:
                 book_id = book_id_result[0][0]
-                st.write("Book_id")
-                st.header(book_id)
+                #st.write("Book_id")
+                #st.header(book_id)
 
                 grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id,selected_page))
-                print(grade_result)
-                st.write("Grade")
-                st.header(grade_result)
+                #print(grade_result)
+                #st.write("Grade")
+                #st.header(grade_result)
 
                 comment_result = db.query("SELECT comment FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
-                print(comment_result)
-                st.write("Comment")
-                st.header(comment_result)
+                #print(comment_result)
+                #st.write("Comment")
+                #st.header(comment_result)
 
 
 
                 weight_result = db.query("SELECT weight FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
-                print(weight_result)
-                st.write("Weight")
-                st.header(weight_result)
+                #print(weight_result)
+                #st.write("Weight")
+                #st.header(weight_result)
 
 
                 date_result = db.query("SELECT date FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
-                print(date_result)
-                st.write("Date")
-                st.header(date_result)
+                #print(date_result)
+                #st.write("Date")
+                #st.header(date_result)
 
-
+                #if date_result == []:
+                #    date_result = datetime.date.today()
+                #else:
+                #    date_result = date_result[0][0]
 
             else:
                 st.warning(f"No book found for {selected_book}")
         else:
             st.warning(f"No kid found for {kid_name}")
+
+        
+
+        #INPUTS
+
+        if grade_result==[]:
+            grade_result = 1
+        else:
+            grade_result = grade_result[0][0]
+
+        container.number_input(label = "Note", key="key_grade_input", value=grade_result, placeholder="Note", help="Bitte hier die Note eintragen!", step=1, min_value=1, max_value=5)
+        
+    
+        
+        if comment_result==[]:
+            comment_result = None
+        else:
+            comment_result = comment_result[0][0]
+        container.text_input(label="Kommentar", placeholder="Kommentar", help="Bitte hier ihren Kommentar eingeben", key="key_comment_input",value=comment_result)
+        
+
+        if weight_result==[]:
+            weight_result = 0.0
+        else:
+            weight_result = weight_result[0][0]
+        container.number_input(label = "Gewichtung", key="key_weight_input", value=weight_result, placeholder="Gewichtung", help="Bitte hier die Gewichtung eintragen!", step=1.0, min_value=0.0, max_value=100.0)
+        
+
+
+        if date_result == []:
+            # If nothing is present, set today's date
+            date_result = datetime.date.today()
+            #convert in datetime.date object
+            #st.header(date_result)
+
+        else:
+            # Extract the date string from the tuple
+            date_result = date_result[0][0]
+            date_string = date_result
+            #st.header(date_string)
+            # Convert the date string to a datetime.date object
+            date_result = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
+
+        # Now use date_input with the modified date_result
+        container.date_input(label="Datum", help="Bitte hier das Datum eingeben", key="key_date_input", value=date_result)
+
+
+
+        button_col1, button_col2, button_col3 = st.columns(3)
+
+
+        if button_col3.button("Speichern"):
+            db.query("INSERT INTO Grade (kidID, bookID, page, grade, comment, weight, date) VALUES (?, ?, ?, ?, ?, ?, ?)", (kid_id, book_id, selected_page, st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input))
+            st.success("Note erfolgreich gespeichert!")
+
+
+        if button_col1.button("Updaten"):
+            db.query("UPDATE Grade SET grade = ?, comment = ?, weight = ?, date = ? WHERE kidID = ? AND bookID = ? AND page = ?", (st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input, kid_id, book_id, selected_page))
+            st.success("Erfolgreich geupdated")
+
+        if button_col2.button("Löschen"):
+            db.query("DELETE FROM Grade WHERE kidID = ?", (kid_id,))
+            st.success("Erfolgreich gelöscht")
+
+
+        
         
 
         
@@ -221,8 +309,7 @@ if st.session_state.showSession == 1:
     uebersicht()
 
 elif st.session_state.showSession == 2:
-    selected_kid, selected_book, selected_page, seitenanz_aus_DB = uebersicht()
-    detailansicht(selected_kid, selected_book, selected_page)
+    detailansicht()
 
 else:
     pass
