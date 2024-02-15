@@ -34,7 +34,7 @@ def button_anlegen_clicked():
         st.session_state.key_name = ""
         st.session_state.key_seitenanzahl = 0
 
-    db.__del__()
+    db.__del__() 
 
 
 def button_speichern_clicked():
