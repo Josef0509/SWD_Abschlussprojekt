@@ -1,6 +1,7 @@
 from st_pages import Page, show_pages, add_page_title
 import streamlit as st
 from db import DB
+from c_buecher import Book
 import time
 
 # Initialize session state
@@ -16,55 +17,52 @@ button2_ph = cl2.button("Bearbeiten", on_click=lambda: st.session_state.__setite
 container = st.container()
 
 def button_anlegen_clicked():
-    #initialize database
-    db = DB()
     name = st.session_state.key_name
     seitenanzahl = st.session_state.key_seitenanzahl
     autonumbering = st.session_state.key_autonumerierung
     
+    new_book = Book(name, seitenanzahl, autonumbering)
+
     if name == "" or seitenanzahl <= 0:
         st.error("Bitte füllen Sie alle Felder aus!")
-    elif db.query("SELECT name FROM Book WHERE name = ?", (name,)) != []:
+    elif new_book.check_if_book_name_exists():
         st.error("Dieses Buch existiert bereits! Sie können es bearbeiten!")
     else:
         with st.spinner("Buch wird gespeichert..."):
             # Daten wirklich speichern
-            db.query("INSERT INTO Book (name, pages, autonumbering) VALUES (?, ?, ?)", (name, seitenanzahl, autonumbering))
+            new_book.save_new_book()
+
         st.success(F"Das Buch '{name}' mit {seitenanzahl} Seite(n) wurde erfolgreich gespeichert!")
         st.session_state.key_name = ""
         st.session_state.key_seitenanzahl = 0
-
-    db.__del__() 
-
 
 def button_speichern_clicked():
     namealt = st.session_state.key_ausg_buch
     name = st.session_state.key_name_neu
     seitenanzahl = st.session_state.key_seitenanzahl_neu
     autonumbering_neu = st.session_state.key_autonumerierung_neu
-    #überprüfen ob es diesen Buchnamen noch nicht in der Datenbank gibt
-    db = DB()
+    update_book = Book(name, seitenanzahl, autonumbering_neu)
 
     if namealt == None or name == "" or seitenanzahl <= 0:
         st.error("Bitte füllen Sie alle Felder aus!")
+    elif update_book.check_if_book_name_exists():
+        st.error("Es gibt bereits ein Buch mit diesem Namen!")
     else:
         with st.spinner("Buch wird gespeichert..."):
-            if name == namealt or not bool(db.query("SELECT 1 FROM Book WHERE name = ?", (name,))):
-                #update that book
-                db.query("UPDATE Book SET name = ?, pages = ?, autonumbering = ? WHERE name = ?", (name, seitenanzahl, autonumbering_neu, namealt))
-                st.success(F"Das Buch '{namealt}' wurde in '{name}' mit {seitenanzahl} Seiten geändert!")
-            else:
-                st.error("Es gibt bereits ein Buch mit diesem Namen!")
+            update_book.update_book(namealt)
+        
+        st.success(F"Das Buch '{namealt}' wurde in '{name}' mit {seitenanzahl} Seiten geändert!")
+
+
 
 def button_loeschen_clicked():
-    db = DB()
     name = st.session_state.key_ausg_buch
-    #überprüfen ob es noch keine Eintragungen zu diesem Buchnamen gibt
+    delete_book = Book(name, 0, False)
     if name == "":
         st.error("Bitte wählen Sie ein Buch aus!")
     else:
         with st.spinner("Buch wird gelöscht..."):
-            db.query("DELETE FROM Book WHERE name = ?", (name,))
+            delete_book.delete_book()
         st.success(F"Das Buch '{name}' wurde erfolgreich gelöscht!")
 
 
