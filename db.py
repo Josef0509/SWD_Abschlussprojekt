@@ -14,7 +14,25 @@ class DB:
             answer = self.c.fetchall()
         return answer
         
-    
     def __del__(self):
         self.conn.close()
-        
+
+
+    #loads all book-names from the database
+    def load_books(self):
+        buecher = self.query("SELECT name FROM Book")     #returns tuples
+        buecher = [buch[0] for buch in buecher]         #convert to list
+        return buecher
+    
+    #loads all book-data from the database
+    def load_book_data(self, name:str):
+        data = self.query("SELECT * FROM Book WHERE name = ?", (name,))
+        return data
+
+    #loads all kid-names from the database
+    def load_kids(self):
+        kids = self.query("SELECT firstname, lastname FROM Kid")     #returns tuples
+        if kids != []:
+            kids = [kid[0]+" "+kid[1] for kid in kids]   #convert to list
+        return kids
+

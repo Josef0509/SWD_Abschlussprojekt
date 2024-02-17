@@ -21,12 +21,12 @@ class Book:
         db.query("INSERT INTO Book (name, pages, autonumbering) VALUES (?, ?, ?)", (self.name, self.pages, self.autonumbering)) == ""
         db.__del__()
     
-    def update_book(self, namealt:str):
+    def update(self, namealt:str):
         db = DB()     
         db.query("UPDATE Book SET name = ?, pages = ?, autonumbering = ? WHERE name = ?", (self.name, self.pages, self.autonumbering, namealt)) == ""
         db.__del__()
 
-    def delete_book(self):
+    def delete(self):
         db = DB()
         #überprüfen ob es noch keine Eintragungen zu diesem Buchnamen gibt
         db.query("DELETE FROM Book WHERE name = ?", (self.name,)) == ""
