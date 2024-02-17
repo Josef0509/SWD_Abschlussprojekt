@@ -2,22 +2,24 @@ import streamlit as st
 import st_pages as stp
 # Function to show the main content
 
+st.set_page_config(layout="centered", page_title="Notensoftware")
+
 def main():
+    st.title("Notensoftware")
     st.markdown(
         """
-        Notensoftware Erklärung am Ende einfügen
+        Beginnen Sie mit der Navigation auf der linken Seite.
         """
     )
     pages = [
-        stp.Page("doc.py", "Dokumentation", "📚"),
-        stp.Page("buecher.py", "Bücher", "📚"),
-        stp.Page("schueler.py", "Schüler", "📚"),
-        stp.Page("gruppen.py", "Gruppen", "📚"),
-        stp.Page("benotung.py", "Benotung", "📚")
+        stp.Page("doc.py", "Dokumentation", ":page_with_curl:"),
+        stp.Page("buecher.py", "Bücher", ":books:"),
+        stp.Page("schueler.py", "Schüler", ":student:"),
+        stp.Page("gruppen.py", "Gruppen", ":man-woman-girl-girl:"),
+        stp.Page("benotung.py", "Benotung", ":1234:")
     ]
-
     stp.show_pages(pages)
-    stp.add_page_title()
+    
 
 def login_pressed(name:str, password:str):
     actual_email = "e"
@@ -35,7 +37,7 @@ def login():
     # Insert a form
     name = st.text_input("Name")
     password = st.text_input("Password", type="password")
-    submit = st.button("Login", on_click=lambda: login_pressed(name, password))
+    st.button("Login", on_click=lambda: login_pressed(name, password))
     
 
 # Initialize session state
