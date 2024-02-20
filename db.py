@@ -36,3 +36,13 @@ class DB:
             kids = [kid[0]+" "+kid[1] for kid in kids]   #convert to list
         return kids
 
+    #is used to store username and hashed password in the database
+    def save_credentials(self, username:str, password:str):
+        self.query("INSERT INTO Credentials (username, password) VALUES (?, ?)", (username, password))
+        
+    #is used to get the credentials from the database
+    def get_credentials(self):
+        credentials = self.query("SELECT * FROM Credentials")
+        usernames = [credential[0] for credential in credentials]
+        passwords = [credential[1] for credential in credentials]
+        return usernames, passwords
