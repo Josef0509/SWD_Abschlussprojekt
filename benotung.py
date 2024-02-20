@@ -6,11 +6,13 @@ from db import DB
 from tkinter import filedialog
 import datetime
 
+st.set_page_config(layout="wide", page_title="Benotung", page_icon=":1234:")
+st.title(":1234:"+" Benotung")
+
+
 # Initialize session state
 if "showSession" not in st.session_state:
     st.session_state.showSession = 1
-
-add_page_title()
 
 cl1, cl2, cl3 = st.columns([0.15, 0.15, 0.7])
 button1_ph = cl1.button("Übersicht", on_click=lambda: st.session_state.__setitem__("showSession", 1),

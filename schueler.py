@@ -4,12 +4,14 @@ import pandas as pd
 import numpy as np
 import time
 from db import DB
+from c_schueler import Kid
+
+st.set_page_config(layout="wide", page_title="Schüler:innen", page_icon=":student:")
+st.title(":student:"+" Schüler:innen")
 
 # Initialize session state
 if "showSession" not in st.session_state:
     st.session_state.showSession = 1
-
-add_page_title()
 
 cl1, cl2, cl3 = st.columns([0.15,0.15,0.7])
 button1_ph = cl1.button("Übersicht", on_click=lambda: st.session_state.__setitem__("showSession", 1), help="Klicken Sie hier um zur individuellen Schüleransicht zu gelangen!")
@@ -25,16 +27,15 @@ def button_export_clicked():
     st.success(F"Erfolgsmeldung")
 
 def button_kind_speichern_clicked():
-    db = DB()
     vorname = st.session_state.key_vorname_schueler
     nachname = st.session_state.key_nachname_schueler
     if vorname == "" or nachname == "":
         st.error("Bitte füllen Sie alle Felder aus!")
     else:
-        if not bool(db.query("SELECT 1 FROM Kid WHERE firstname = ? AND lastname = ?", (vorname,nachname))):
+        new_kid = Kid(vorname, nachname)
+        if not new_kid.check_if_kid_name_exists():
             with st.spinner("Kind wird gespeichert..."):
-                db.query("INSERT INTO Kid (firstname, lastname, groupID) VALUES (?, ?, ?)", (vorname, nachname, 1)) #groupID TBD
-
+                new_kid.save_new_kid()
             st.success(F"Das Kind '{vorname} {nachname}' wurde erfolgreich gespeichert!")
             st.session_state.key_vorname_schueler = ""
             st.session_state.key_nachname_schueler = ""
@@ -42,7 +43,6 @@ def button_kind_speichern_clicked():
             st.error("Dieses Kind existiert bereits!")
     
 def button_loeschen_clicked():
-    db = DB()
     name = st.session_state.key_ausg_Kind
     vorname = name.split(" ")[0]
     nachname = name.split(" ")[1]
@@ -50,8 +50,9 @@ def button_loeschen_clicked():
     if name == None:
         st.error("Bitte wählen Sie ein Kind aus!")
     else:
+        delete_kid = Kid(vorname, nachname)
         with st.spinner("Kind wird gelöscht..."):
-            db.query("DELETE FROM Kid WHERE firstname = ? AND lastname = ?", (vorname, nachname))
+            delete_kid.delete()
         st.success(F"Das Kind '{name}' wurde erfolgreich gelöscht!")
 
 def button_speichern_clicked():
@@ -66,10 +67,10 @@ def button_speichern_clicked():
         if vorname_neu == "" or nachname_neu == "":
             st.error("Bitte füllen Sie alle Felder aus!")
         else: 
-            db = DB()
-            if not bool(db.query("SELECT 1 FROM Kid WHERE firstname = ? AND lastname = ?", (vorname_neu,nachname_neu))):
+            update_kid = Kid(vorname_neu, nachname_neu)
+            if not update_kid.check_if_kid_name_exists():
                 with st.spinner("Kind wird gespeichert..."):
-                    db.query("UPDATE Kid SET firstname = ?, lastname = ? WHERE firstname = ? AND lastname = ?", (vorname_neu, nachname_neu, vorname_alt, nachname_alt))
+                    update_kid.update(vorname_alt, nachname_alt)
                 st.success(F"Das Kind '{vorname_alt} {nachname_alt}' wurde in '{vorname_neu} {nachname_neu}' geändert!")
             else:
                 st.error("Dieses Kind existiert bereits!")
@@ -79,13 +80,13 @@ def button_speichern_clicked():
 
 def uebersicht():
     db = DB()
-    kids = db.query("SELECT firstname, lastname FROM Kid")     #returns tuples
-    if kids != []:
-        kids = [kid[0]+" "+kid[1] for kid in kids]   #convert to list
-    
+    kids = db.load_kids()    
     container.selectbox(label="Kind auswählen",key="key_ausg_Kind", index=0, options=kids, help="Bitte hier das Kind auswählen das Sie anzeigen wollen!")
     
-    chart_data = pd.DataFrame(np.random.randn(20, 3), columns=["Fach1", "Fach2", "Fach3"])
+    books = db.load_books()
+    db.__del__()
+    chart_data = pd.DataFrame(np.random.randn(20, 3), columns=books)
+
     container.line_chart(chart_data)
     container.write("Aktuelle Noten:")
     #notenstand ermitteln
@@ -102,10 +103,8 @@ def anlegen():
 
 def bearbeiten():
     db = DB()
-    kids = db.query("SELECT firstname, lastname FROM Kid")     #returns tuples
-    if kids != []:
-        kids = [kid[0]+" "+kid[1] for kid in kids]   #convert to list
-
+    kids = db.load_kids()
+    db.__del__()
     container.selectbox(label="Kind auswählen",key="key_ausg_Kind", index=0, options=kids, help="Bitte hier das Kind auswählen das Sie anzeigen wollen!")
     
     if kids != []:

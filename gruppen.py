@@ -4,11 +4,13 @@ import pandas as pd
 import numpy as np
 import time
 
+st.set_page_config(layout="wide", page_title="Gruppen", page_icon=":man-woman-girl-girl:")
+st.title(":man-woman-girl-girl:"+" Gruppen")
+
 # Initialize session state
 if "showSession" not in st.session_state:
     st.session_state.showSession = 1
 
-add_page_title()
 
 cl1, cl2, cl3 = st.columns([0.2,0.2,0.6])
 button1_ph = cl1.button("Teilnehmer", on_click=lambda: st.session_state.__setitem__("showSession", 1), help="Klicken Sie hier um Kinder in Gruppen einzuteilen!")
