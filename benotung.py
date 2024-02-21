@@ -5,6 +5,7 @@ import numpy as np
 from db import DB
 from tkinter import filedialog
 import datetime
+from c_gruppen import Group
 
 st.set_page_config(layout="wide", page_title="Benotung", page_icon=":1234:")
 st.title(":1234:"+" Benotung")
@@ -60,48 +61,77 @@ def uebersicht():
     book_id = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
     book_id = book_id[0][0]
         
-
-    kids = db.query("SELECT firstname, lastname FROM Kid " )     #returns tuples
-
-    if kids != []: 
-         kids = [kid[0]+" "+kid[1] for kid in kids]   #convert to list
-
-    df = pd.DataFrame()
-
+  
     if seitenanz_aus_DB:
-       # container.write(f"Seitenanzahl: {seitenanz_aus_DB}")
+       
 
-        # Fetch all kidIDs
-        kid_ids = db.query("SELECT kidID FROM Kid")
-        #container.write(kid_ids)
+        groups = db.load_groups()
+        #st.header(groups)
 
-        for page in range(1, seitenanz_aus_DB + 1):
-            page_grades = []
+        for group in groups:
+            df_group = pd.DataFrame()
 
-            for kid_id in kid_ids:
-                #mache eine neue spalte für die noten von dieer seite
-                grade = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id[0], book_id, page))
-                if grade:
-                    page_grades.append(grade[0][0])
-                else:
-                    page_grades.append(None)
+            group_id = Group(group).get_groupID()
+            #st.write("group_id")
+            #st.header(group_id)
+
+           
+          
+            kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
+            #st.write("kids_in_group")
+            #st.header(kids_in_group)
+
+            kid_ids = db.query("SELECT kidID FROM Kid WHERE groupID = ?", (group_id,))
+            
+            #st.write("kid_ids")
+            #st.header(kid_ids)
+
+
+
+            for page in range(1, seitenanz_aus_DB + 1):
+                page_grades = []
+
+
+
+                for kid_id in kid_ids:
+                    #mache eine neue spalte für die noten von dieer seite
+                    grade = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id[0], book_id, page))
+                    if grade:
+                        page_grades.append(grade[0][0])
+                    else:
+                        page_grades.append(None)
                 
-            df[f"S. {page}"] = page_grades
 
-        df.insert(0, 'Kid Name', kids)  # Insert Kid Names as the first column
+                df_group[f"S. {page}"] = page_grades
+            
+            df_group.insert(0, 'Kid Name', kids_in_group)  # Insert Kid Names as the first column
 
 
 
+            st.subheader(group)
+            st.data_editor(
+                    df_group,
+                    hide_index=True,
+                    disabled=df_group.columns,
+                )
+            st.caption(f"Hier sehen Sie die Noten der Kinder in der {group}.")
+            st.divider()
+        
+        st.caption("Die Spalten entsprechen den Seiten des Buches und die Zeilen den Kindern. Die Noten sind in den Zellen eingetragen. Wenn eine Zelle leer ist, hat das Kind die Seite noch nicht bewertet.")
+
+            
+
+                
+
+      
+        
 
         # Get dataframe row-selections from user with st.data_editor
-        st.data_editor(
-            df,
-            hide_index=True,
-            disabled=df.columns,
-        )
-
-        
-        
+        #st.data_editor(
+        #    df,
+        #    hide_index=True,
+        #    disabled=df.columns,
+        #)
 
         
 
