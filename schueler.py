@@ -70,7 +70,7 @@ def button_speichern_clicked():
             update_kid = Kid(vorname_neu, nachname_neu)
             if not update_kid.check_if_kid_name_exists():
                 with st.spinner("Kind wird gespeichert..."):
-                    update_kid.update(vorname_alt, nachname_alt)
+                    update_kid.update_name(vorname_alt, nachname_alt)
                 st.success(F"Das Kind '{vorname_alt} {nachname_alt}' wurde in '{vorname_neu} {nachname_neu}' geändert!")
             else:
                 st.error("Dieses Kind existiert bereits!")
