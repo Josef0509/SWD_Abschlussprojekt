@@ -36,3 +36,16 @@ class Kid:
         #überprüfen ob es noch keine Eintragungen zu diesem Buchnamen gibt
         db.query("DELETE FROM Kid WHERE firstname = ? AND lastname = ?", (self.firstname, self.lastname))
         db.__del__()
+
+    def get_kid_ID(self):
+        db = DB()
+        kidID = db.query("SELECT kidID FROM Kid WHERE firstname = ? AND lastname = ?", (self.firstname, self.lastname))
+        db.__del__()
+        return kidID[0][0]
+    
+    def get_grades_with_bookID(self, bookID:int):
+        db = DB()
+        grades = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ?", (self.get_kid_ID(), bookID))
+        db.__del__()
+        grades = [grade[0] for grade in grades] #unpacking the list of tuples
+        return grades

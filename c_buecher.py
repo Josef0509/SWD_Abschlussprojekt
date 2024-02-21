@@ -2,7 +2,7 @@
 from db import DB
 
 class Book:
-    def __init__(self, name:str, pages:int, autonumbering:bool):
+    def __init__(self, name:str, pages:int = None, autonumbering:bool = None):
         self.name = name
         self.pages = pages
         self.autonumbering = autonumbering
@@ -31,3 +31,12 @@ class Book:
         #überprüfen ob es noch keine Eintragungen zu diesem Buchnamen gibt
         db.query("DELETE FROM Book WHERE name = ?", (self.name,)) == ""
         db.__del__()
+
+    def get_ID(self):
+        db = DB()
+        ans = db.query("SELECT bookID FROM Book WHERE name = ?", (self.name,))
+        db.__del__()
+        return ans[0][0]
+    
+    def get_name(self):
+        return self.name
