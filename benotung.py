@@ -185,10 +185,7 @@ def detailansicht():
 
     selected_page = container.number_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!", step=1, min_value=1, max_value=seitenanz_aus_DB)
     
-    
-    
-    
-    
+ 
 
     
 
@@ -275,16 +272,6 @@ def detailansicht():
 
 
         
-        
-
-        
-
-
-
-
-
-
-
         
 
 
