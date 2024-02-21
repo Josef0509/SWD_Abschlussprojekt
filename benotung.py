@@ -14,12 +14,15 @@ st.title(":1234:"+" Benotung")
 if "showSession" not in st.session_state:
     st.session_state.showSession = 1
 
-cl1, cl2, cl3 = st.columns([0.3, 0.3, 0.7])
+cl1, cl2, cl3 = st.columns([0.3, 1, 1])
 button1_ph = cl1.button("Übersicht", on_click=lambda: st.session_state.__setitem__("showSession", 1),
                          help="Klicken Sie hier um zur Übersicht zu gelangen!")
 
 button2_ph = cl2.button("Detailansicht", on_click=lambda: st.session_state.__setitem__("showSession", 2),
                         help="Klicken Sie hier um die Detailansicht zu sehen!")
+
+
+
 
 
 container = st.container()
@@ -139,18 +142,8 @@ def detailansicht():
     selected_kid = container.selectbox(label="Kind auswählen", key="key_ausg_Kind", index=0, options=kids,
                                             help="Bitte hier das Kind auswählen das Sie anzeigen wollen!")
     
-    st.write("selected_kid")
-    st.header(selected_kid)
-    
-    
-    seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
-    seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
-        
-    selected_page = container.number_input(label="Seite auswählen", key="key_ausg_Seite", value=1, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!", step=1, min_value=1, max_value=seitenanz_aus_DB)
-    st.write("selected_page")
-    st.header(selected_page)
-    
-    
+    #st.write("selected_kid")
+    #st.header(selected_kid)
     first_name = selected_kid.split(" ")[0]
     last_name = selected_kid.split(" ")[1]
     
@@ -160,10 +153,44 @@ def detailansicht():
     #st.write("kid_id")
     #st.header(kid_id)
 
+
     book_id_result = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
     book_id = book_id_result[0][0]
     #st.write("Book_id")
     #st.header(book_id)
+
+
+
+    
+    seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
+    seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
+    
+
+
+    #count how many pages are already graded
+
+    #count_pages = db.query("SELECT COUNT(DISTINCT page) FROM Grade WHERE kidID = ? AND bookID = ?", (kid_id, book_id))
+    #count_pages = count_pages[0][0] if count_pages and count_pages[0] else None
+    #st.header(count_pages)
+
+    #if count_pages == 0:
+    #    count_pages = 1
+
+
+    #select first ungraded page
+    last_graded_page = db.query("SELECT MAX(page) FROM Grade WHERE kidID = ? AND bookID = ?", (kid_id, book_id))
+    last_graded_page = last_graded_page[0][0] if last_graded_page and last_graded_page[0] else None
+    #st.header(last_graded_page)
+
+
+    selected_page = container.number_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!", step=1, min_value=1, max_value=seitenanz_aus_DB)
+    
+    
+    
+    
+    
+
+    
 
     grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id,selected_page))
     #st.write("Grade")
@@ -183,7 +210,7 @@ def detailansicht():
 
 
     
-        
+    st.header("Eingabe der Details:")
 
     #INPUTS
 
@@ -192,7 +219,7 @@ def detailansicht():
     else:
         grade_result = grade_result[0][0]
 
-    container.number_input(label = "Note", key="key_grade_input", value=grade_result, placeholder="Note", help="Bitte hier die Note eintragen!", step=1, min_value=1, max_value=5)
+    st.number_input(label = "Note", key="key_grade_input", value=grade_result, placeholder="Note", help="Bitte hier die Note eintragen!", step=1, min_value=1, max_value=5)
     
 
     
@@ -200,14 +227,14 @@ def detailansicht():
         comment_result = None
     else:
         comment_result = comment_result[0][0]
-    container.text_input(label="Kommentar", placeholder="Kommentar", help="Bitte hier ihren Kommentar eingeben", key="key_comment_input",value=comment_result)
+    st.text_input(label="Kommentar", placeholder="Kommentar", help="Bitte hier ihren Kommentar eingeben", key="key_comment_input",value=comment_result)
     
 
     if weight_result==[]:
         weight_result = 0.0
     else:
         weight_result = weight_result[0][0]
-    container.number_input(label = "Gewichtung", key="key_weight_input", value=weight_result, placeholder="Gewichtung", help="Bitte hier die Gewichtung eintragen!", step=1.0, min_value=0.0, max_value=100.0)
+    st.number_input(label = "Gewichtung", key="key_weight_input", value=weight_result, placeholder="Gewichtung", help="Bitte hier die Gewichtung eintragen!", step=1.0, min_value=0.0, max_value=100.0)
     
 
 
@@ -226,7 +253,7 @@ def detailansicht():
         date_result = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
 
     # Now use date_input with the modified date_result
-    container.date_input(label="Datum", help="Bitte hier das Datum eingeben", key="key_date_input", value=date_result)
+    st.date_input(label="Datum", help="Bitte hier das Datum eingeben", key="key_date_input", value=date_result)
 
 
 
