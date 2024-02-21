@@ -6,6 +6,11 @@ import time
 from db import DB
 from c_schueler import Kid
 
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+
 st.set_page_config(layout="wide", page_title="Schüler:innen", page_icon=":student:")
 st.title(":student:"+" Schüler:innen")
 
@@ -85,6 +90,8 @@ def uebersicht():
     
     books = db.load_books()
     db.__del__()
+
+
     chart_data = pd.DataFrame(np.random.randn(20, 3), columns=books)
 
     container.line_chart(chart_data)
@@ -93,7 +100,33 @@ def uebersicht():
     container.write("Fach 1: 1.45")
     container.write("Fach 2: 2.01")
     container.write("Fach 3: 3.23")
-    container.button(label="Exportieren", on_click=button_export_clicked, help="Klicken Sie hier um diese Übersicht zu exportieren!")
+
+    # Create the line chart
+    plt.figure(figsize=(10, 6))
+    for book in books:
+        plt.plot(chart_data.index, chart_data[book], label=book)
+    plt.xlabel('Index')
+    plt.ylabel('Values')
+    plt.title('Chart Data')
+    plt.legend()
+
+    # Export the chart to PDF
+    plt.savefig('chart_data.pdf')
+
+    container.download_button(
+    label="Exportieren",
+    data=chart_data.to_csv().encode('utf-8'),
+    file_name='exportNoten.csv',
+    mime='text/csv',
+    )
+
+    # Provide download button for the PDF
+    container.download_button(
+        label="Chart Exportieren",
+        data=open('chart_data.pdf', 'rb').read(),
+        file_name='chart_data.pdf',
+        mime='application/pdf',
+    )
 
 def anlegen():
     container.text_input(label="Vorname", key="key_vorname_schueler", placeholder="Vorname des Kindes", help="Bitte hier den Vornamen des Kindes eingeben das Sie anlegen wollen!")
