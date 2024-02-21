@@ -1,4 +1,5 @@
 import sqlite3
+import streamlit as st
 
 class DB:
     def __init__(self):
@@ -65,3 +66,23 @@ class DB:
         return groups
     
     #load group
+
+    def update_or_save_grade(self, kid_id, book_id, selected_page, grade_input, comment_input, weight_input, date_input):
+        grade_result = self.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+
+        if grade_result:
+            self.query("UPDATE Grade SET grade = ?, comment = ?, weight = ?, date = ? WHERE kidID = ? AND bookID = ? AND page = ?", 
+                           (grade_input, comment_input, weight_input, date_input, kid_id, book_id, selected_page))
+            st.success("Note erfolgreich geupdated!")
+            return "Erfolgreich geupdated"
+        else:
+            self.query("INSERT INTO Grade (kidID, bookID, page, grade, comment, weight, date) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+                          (kid_id, book_id, selected_page, grade_input, comment_input, weight_input, date_input))
+            st.success("Note erfolgreich gespeichert!")
+            return "Note erfolgreich gespeichert!"
+        
+    def delete_grade(self, kid_id, book_id, selected_page):
+        self.query("DELETE FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+        st.success("Erfolgreich gelöscht")
+        
+        return "Note erfolgreich gelöscht!"

@@ -217,11 +217,19 @@ def detailansicht():
     selected_group = container.selectbox(label="Gruppe auswählen", key="key_ausg_Gruppe", index=0, options=db.load_groups(),
                                             help="Bitte hier die Gruppe auswählen die Sie anzeigen wollen!")
     
-    group_id = Group(selected_group).get_groupID()
+    try:
 
+        group_id = Group(selected_group).get_groupID()
+    except Exception as e:
+        logging.exception('Fehler beim Laden der GruppenID!')
+        st.write("Fehler beim Laden der GruppenID!")
 
-    #kid selection
-    kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
+    try:
+        #kid selection
+        kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
+    except Exception as e:
+        logging.exception('Fehler beim Laden der Kinder in der Gruppe!')
+        st.write("Fehler beim Laden der Kinder in der Gruppe!")
     
     selected_kid = container.selectbox(label="Kind auswählen", key="key_ausg_Kind", index=0, options=kids_in_group,
                                             help="Bitte hier das Kind auswählen das Sie anzeigen wollen!")
@@ -230,14 +238,21 @@ def detailansicht():
     first_name = selected_kid.split(" ")[0]
     last_name = selected_kid.split(" ")[1]
     
-    #get kid_id
-    kid_id = db.query("SELECT kidID FROM Kid WHERE firstname = ? AND lastname = ?", (first_name, last_name,))
-    kid_id = kid_id[0][0]
+    try:
+        #get kid_id
+        kid_id = db.query("SELECT kidID FROM Kid WHERE firstname = ? AND lastname = ?", (first_name, last_name,))
+        kid_id = kid_id[0][0]
+    except Exception as e:
+        logging.exception('Fehler beim Laden der KidID!')
+        st.write("Fehler beim Laden der KidID!")
     
-
-    #book selection
-    book_id_result = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
-    book_id = book_id_result[0][0]
+    
+    try:#book selection
+        book_id_result = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
+        book_id = book_id_result[0][0]
+    except Exception as e:
+        logging.exception('Fehler beim Laden der BuchID!')
+        st.write("Fehler beim Laden der BuchID!")
     
 
 
@@ -250,9 +265,13 @@ def detailansicht():
     #if count_pages == 0:
     #    count_pages = 1
     
-    #get the number of pages of the selected book
-    seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
-    seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
+    try:
+        #get the number of pages of the selected book
+        seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
+        seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
+    except Exception as e:
+        logging.exception('Fehler bei der Übergabe der Seitenanzahl des Buches!')
+        st.write("Fehler bei der Übergabe der Seitenanzahl des Buches!")
     
 
     #select first ungraded page
@@ -260,6 +279,10 @@ def detailansicht():
     last_graded_page = last_graded_page[0][0] 
     if last_graded_page == None:
         last_graded_page = 1
+
+    #größer als seitananzahl
+    if last_graded_page + 1 > seitenanz_aus_DB:
+        last_graded_page = seitenanz_aus_DB-1
 
     #page selection, +1 for next page to grade
     selected_page = container.number_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page+1, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!", step=1, min_value=1, max_value=seitenanz_aus_DB)
@@ -330,20 +353,14 @@ def detailansicht():
 
 
     if button_col1.button("Speichern", help="Klicken Sie hier um die Note zu speichern!"):
-        grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
-        if grade_result:
-            db.query("UPDATE Grade SET grade = ?, comment = ?, weight = ?, date = ? WHERE kidID = ? AND bookID = ? AND page = ?", (st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input, kid_id, book_id, selected_page))
-            st.success("Erfolgreich geupdated")
-        else:
-            db.query("INSERT INTO Grade (kidID, bookID, page, grade, comment, weight, date) VALUES (?, ?, ?, ?, ?, ?, ?)", (kid_id, book_id, selected_page, st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input))
-            st.success("Note erfolgreich gespeichert!")
+        db.update_or_save_grade(kid_id, book_id, selected_page, st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input)
 
         
 
     if button_col2.button("Löschen", help="Klicken Sie hier um die Note zu löschen!"):
-        db.query("DELETE FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
-        st.success("Erfolgreich gelöscht")
-
+        db.delete_grade(kid_id, book_id, selected_page)
+        #seite neu laden
+        st.experimental_rerun()
 
 
 
