@@ -345,3 +345,31 @@ elif st.session_state.showSession == 2:
 
 else:
     pass
+
+
+
+
+
+
+
+
+
+
+groups = db.load_groups()
+        #st.header(groups)
+
+        for group in groups:
+            df_group = pd.DataFrame()
+
+            group_id = Group(group).get_groupID()
+            #st.write("group_id")
+            #st.header(group_id)
+
+           
+          
+            kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
+            #st.write("kids_in_group")
+            #st.header(kids_in_group)
+
+            kid_ids = db.query("SELECT kidID FROM Kid WHERE groupID = ?", (group_id,))
+            
