@@ -10,3 +10,4 @@ Installing necessary packages:
   pip install streamlit
   pip install st_pages
   pip install streamlit-authenticator
+  pip install matplotlib
