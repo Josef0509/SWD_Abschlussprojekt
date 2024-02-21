@@ -278,17 +278,19 @@ def detailansicht():
 
     #------------------------BUTTONS---------------------------------------------------------------------
     #buttons for saving, updating and deleting the grade
-    button_col1, button_col2, button_col3 = st.columns(3)
+    button_col1, button_col2, button_col3 = st.columns([0.3, 1, 1])
 
 
-    if button_col3.button("Speichern", help="Klicken Sie hier um die Note zu speichern!"):
-        db.query("INSERT INTO Grade (kidID, bookID, page, grade, comment, weight, date) VALUES (?, ?, ?, ?, ?, ?, ?)", (kid_id, book_id, selected_page, st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input))
-        st.success("Note erfolgreich gespeichert!")
+    if button_col1.button("Speichern", help="Klicken Sie hier um die Note zu speichern!"):
+        grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+        if grade_result:
+            db.query("UPDATE Grade SET grade = ?, comment = ?, weight = ?, date = ? WHERE kidID = ? AND bookID = ? AND page = ?", (st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input, kid_id, book_id, selected_page))
+            st.success("Erfolgreich geupdated")
+        else:
+            db.query("INSERT INTO Grade (kidID, bookID, page, grade, comment, weight, date) VALUES (?, ?, ?, ?, ?, ?, ?)", (kid_id, book_id, selected_page, st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input))
+            st.success("Note erfolgreich gespeichert!")
 
-
-    if button_col1.button("Updaten", help="Klicken Sie hier um die Note zu updaten!"):
-        db.query("UPDATE Grade SET grade = ?, comment = ?, weight = ?, date = ? WHERE kidID = ? AND bookID = ? AND page = ?", (st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input, kid_id, book_id, selected_page))
-        st.success("Erfolgreich geupdated")
+        
 
     if button_col2.button("Löschen", help="Klicken Sie hier um die Note zu löschen!"):
         db.query("DELETE FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
