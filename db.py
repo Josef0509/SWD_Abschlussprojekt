@@ -35,6 +35,17 @@ class DB:
         if kids != []:
             kids = [kid[0]+" "+kid[1] for kid in kids]   #convert to list
         return kids
+    
+    #loads all kid-names from the database, which are in the group with the given groupID or in no group
+    def load_kids_in_group_or_available(self, groupID:int):
+        kids_in = self.query("SELECT firstname, lastname FROM Kid WHERE groupID = ?", (groupID,))     #returns tuples
+        kids_nowhere = self.query("SELECT firstname, lastname FROM Kid WHERE groupID IS NULL")     #returns tuples
+        if kids_in != []:
+            kids_in = [kid[0]+" "+kid[1] for kid in kids_in]   #convert to list
+        if kids_nowhere != []:
+            kids_nowhere = [kid[0]+" "+kid[1] for kid in kids_nowhere]   #convert to list
+        
+        return kids_in, kids_nowhere
 
     #is used to store username and hashed password in the database
     def save_credentials(self, username:str, password:str):
@@ -46,3 +57,11 @@ class DB:
         usernames = [credential[0] for credential in credentials]
         passwords = [credential[1] for credential in credentials]
         return usernames, passwords
+    
+    #loads all group-names from the database
+    def load_groups(self):
+        groups = self.query("SELECT groupname FROM 'Group'")     #returns tuples
+        groups = [group[0] for group in groups]         #convert to list
+        return groups
+    
+    #load group
