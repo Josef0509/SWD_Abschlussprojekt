@@ -86,3 +86,9 @@ class DB:
         st.success("Erfolgreich gelöscht")
         
         return "Note erfolgreich gelöscht!"
+    
+
+    def get_seitenanzahl(self, selected_book:str):
+        seitenanz_aus_DB = self.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
+        seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
+        return seitenanz_aus_DB

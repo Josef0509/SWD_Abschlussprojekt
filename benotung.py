@@ -81,8 +81,8 @@ def uebersicht():
     
     try: 
         #get the number of pages of the selected book
-        seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
-        seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
+        seitenanz_aus_DB = db.get_seitenanzahl(selected_book)
+        
     except Exception as e:
         logging.exception('Fehler bei der Übergabe der Seitenanzahl des Buches!')
         st.text("Fehler bei der Übergabe der Seitenanzahl des Buches!")
