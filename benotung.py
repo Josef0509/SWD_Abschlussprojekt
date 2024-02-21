@@ -6,6 +6,11 @@ from db import DB
 from tkinter import filedialog
 import datetime
 from c_gruppen import Group
+import logging
+
+#configure logfile
+logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
+logging.info('Benotung ausgewaehlt')
 
 
 # Configuration of the page
@@ -45,7 +50,8 @@ try:
     buecher = [buch[0] for buch in buecher] if buecher else []
 
 except Exception as e:
-    st.text("Keine Bücher vorhanden!")
+    logging.exception('Fehler beim Laden der Bücher!')
+    st.text("Fehler beim Laden der Bücher!")
 
 
 # Create a selectbox to select a book
@@ -62,7 +68,8 @@ def uebersicht():
     try:
         db = DB()
     except Exception as e:
-        st.text("Fehler bei der Verbindung mit der Datenbank!")
+        logging.exception('Fehler beim Laden der Datenbank!')
+        st.text("Fehler beim Laden der Datenbank!")
     #visual appearance
         
     container.divider()
@@ -77,6 +84,7 @@ def uebersicht():
         seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
         seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
     except Exception as e:
+        logging.exception('Fehler bei der Übergabe der Seitenanzahl des Buches!')
         st.text("Fehler bei der Übergabe der Seitenanzahl des Buches!")
 
     try:
@@ -84,6 +92,7 @@ def uebersicht():
         book_id = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
         book_id = book_id[0][0]
     except Exception as e:
+        logging.exception('Fehler bei der Übergabe der BuchID des Buches!')
         st.text("Fehler bei der Übergabe der BuchID des Buches!") 
   
     if seitenanz_aus_DB:
@@ -92,6 +101,7 @@ def uebersicht():
         try:
             groups = db.load_groups()
         except Exception as e:
+            logging.exception('Fehler beim Laden der Gruppen!')
             st.write("Fehler bem Laden der Gruppen!")
 
         for group in groups:
@@ -103,6 +113,7 @@ def uebersicht():
                 #get the group_id of the selected group
                 group_id = Group(group).get_groupID()
             except Exception as e:
+                logging.exception('Fehler beim Laden der GruppenID!')
                 st.write("Fehler beim Laden der GruppenID!")
            
 
@@ -110,12 +121,14 @@ def uebersicht():
                 #get the kids in the selected group
                 kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
             except:
+                logging.exception('Fehler beim Laden der Kinder in der Gruppe!')
                 st.write("Fehler beim Laden der Kinder in der Gruppe!")
 
             try:
                 #get the kid_ids of the kids in the selected group
                 kid_ids = db.query("SELECT kidID FROM Kid WHERE groupID = ?", (group_id,))
             except Exception as e:
+                logging.exception('Fehler beim Laden der KidID!')
                 st.write("Fehler beim Laden der KidID")
 
             #create a new column for each page of the selected book
@@ -130,6 +143,7 @@ def uebersicht():
                     try:
                         grade = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id[0], book_id, page))
                     except Exception as e:
+                        logging.exception('Fehler beim Laden der Noten!')
                         st.write("Fehler beim Laden der Noten!")
 
                     #if grade is present, append it to the list, else append an empty string
@@ -171,6 +185,7 @@ def uebersicht():
                     st.success(f"Data successfully exported to {file_path}")
 
             except Exception as e:
+                logging.exception('Fehler beim Exportieren als CSV!')
                 st.write("Fehler beim Exportieren als CSV!")
 
             #visual appearance
@@ -191,7 +206,11 @@ def uebersicht():
 #++++++++++++++++++++++++++++++++++DETAILANSICHT+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def detailansicht():
     #database object
-    db = DB()
+    try:
+        db = DB()
+    except Exception as e:
+        logging.exception('Fehler beim Laden der Datenbank!')
+        st.write("Fehler beim Laden der Datenbank!")
 
 
     #group selection

@@ -3,7 +3,10 @@ import st_pages as stp
 import streamlit_authenticator as stauth
 from db import DB
 from encode import hash
+import logging
 # Function to show the main content
+
+logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
 st.set_page_config(layout="centered", page_title="Notensoftware")
 
@@ -35,6 +38,7 @@ def login_pressed(name:str, password:str):
 
     if name in db_usernames and hashed_password == db_passwords[db_usernames.index(name)]:
         st.session_state.logged_in = True
+        logging.info(f"User {name} logged in.")
         
     else:
         st.error("The name or password you entered is incorrect.")
