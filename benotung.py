@@ -39,15 +39,18 @@ container = st.container()
 # Create a database object
 db = DB()
 
+try:
+    # Load all book-names from the database
+    buecher = db.query("SELECT name FROM Book")  # returns tuples
+    buecher = [buch[0] for buch in buecher] if buecher else []
 
-# Load all book-names from the database
-buecher = db.query("SELECT name FROM Book")  # returns tuples
-buecher = [buch[0] for buch in buecher] if buecher else []
+except Exception as e:
+    st.text("Keine Bücher vorhanden!")
+
 
 # Create a selectbox to select a book
 selected_book = container.selectbox(label="Buch auswählen", key="key_ausg_Buch", index=0, options=buecher,
-                                    help="Bitte hier das Buch auswählen das Sie anzeigen wollen!")
-
+                                        help="Bitte hier das Buch auswählen das Sie anzeigen wollen!")
 
 
 
@@ -56,9 +59,12 @@ selected_book = container.selectbox(label="Buch auswählen", key="key_ausg_Buch"
 def uebersicht():
 
     # Create a database object
-    db = DB()
-
+    try:
+        db = DB()
+    except Exception as e:
+        st.text("Fehler bei der Verbindung mit der Datenbank!")
     #visual appearance
+        
     container.divider()
     st.header("Benotungsübersicht:")
 
@@ -66,35 +72,51 @@ def uebersicht():
     #sessionstate variables to selected book
     selected_book = st.session_state.key_ausg_Buch
     
-    #get the number of pages of the selected book
-    seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
-    seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
+    try: 
+        #get the number of pages of the selected book
+        seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
+        seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
+    except Exception as e:
+        st.text("Fehler bei der Übergabe der Seitenanzahl des Buches!")
 
-
-    #get the book_id of the selected book
-    book_id = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
-    book_id = book_id[0][0]
-        
+    try:
+        #get the book_id of the selected book
+        book_id = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
+        book_id = book_id[0][0]
+    except Exception as e:
+        st.text("Fehler bei der Übergabe der BuchID des Buches!") 
   
     if seitenanz_aus_DB:
        
         #load all groups from the database
-        groups = db.load_groups()
+        try:
+            groups = db.load_groups()
+        except Exception as e:
+            st.write("Fehler bem Laden der Gruppen!")
 
         for group in groups:
+            
             #create a dataframe for each group
             df_group = pd.DataFrame()
 
-            #get the group_id of the selected group
-            group_id = Group(group).get_groupID()
-
+            try:
+                #get the group_id of the selected group
+                group_id = Group(group).get_groupID()
+            except Exception as e:
+                st.write("Fehler beim Laden der GruppenID!")
            
-            #get the kids in the selected group
-            kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
-            
-            #get the kid_ids of the kids in the selected group
-            kid_ids = db.query("SELECT kidID FROM Kid WHERE groupID = ?", (group_id,))
-            
+
+            try:
+                #get the kids in the selected group
+                kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
+            except:
+                st.write("Fehler beim Laden der Kinder in der Gruppe!")
+
+            try:
+                #get the kid_ids of the kids in the selected group
+                kid_ids = db.query("SELECT kidID FROM Kid WHERE groupID = ?", (group_id,))
+            except Exception as e:
+                st.write("Fehler beim Laden der KidID")
 
             #create a new column for each page of the selected book
             for page in range(1, seitenanz_aus_DB + 1):
@@ -105,7 +127,11 @@ def uebersicht():
                 #get the grades of the kids in the selected group for each page
                 for kid_id in kid_ids:
                     
-                    grade = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id[0], book_id, page))
+                    try:
+                        grade = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id[0], book_id, page))
+                    except Exception as e:
+                        st.write("Fehler beim Laden der Noten!")
+
                     #if grade is present, append it to the list, else append an empty string
                     if grade:
                         page_grades.append(grade[0][0])
@@ -137,16 +163,21 @@ def uebersicht():
             #create file path for each group
             file_path = f"C:\\Users\\sandr\\OneDrive\\Desktop\\test\\{group}_export.csv"
 
-            #create a button to export the dataframe to a csv file
-            if st.button(f"Export {group} to CSV", help="Klicken Sie hier um die Daten als CSV zu exportieren!"):
-                df_group.to_csv(file_path, sep='\t')
-                st.success(f"Data successfully exported to {file_path}")
+            try:
+
+                #create a button to export the dataframe to a csv file
+                if st.button(f"Export {group} to CSV", help="Klicken Sie hier um die Daten als CSV zu exportieren!"):
+                    df_group.to_csv(file_path, sep='\t')
+                    st.success(f"Data successfully exported to {file_path}")
+
+            except Exception as e:
+                st.write("Fehler beim Exportieren als CSV!")
 
             #visual appearance
             st.divider()
         
         #visual appearance
-        st.caption("Die Spalten entsprechen den Seiten des Buches und die Zeilen den Kindern. Die Noten sind in den Zellen eingetragen. Wenn eine Zelle leer ist, hat das Kind die Seite noch nicht bewertet.")
+        st.caption("Die Spalten entsprechen den Seiten des Buches und die Zeilen den Kindern. Die Noten sind in den Zellen eingetragen. Wenn eine Zelle leer ist, hwurde die Seite noch nicht bewertet.")
 
             
     else:
@@ -155,8 +186,6 @@ def uebersicht():
     return 
             
     
-
-
 
 
 #++++++++++++++++++++++++++++++++++DETAILANSICHT+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
