@@ -7,7 +7,11 @@ from tkinter import filedialog
 import datetime
 from c_gruppen import Group
 
+
+# Configuration of the page
 st.set_page_config(layout="wide", page_title="Benotung", page_icon=":1234:")
+
+# Add title to the page
 st.title(":1234:"+" Benotung")
 
 
@@ -15,7 +19,11 @@ st.title(":1234:"+" Benotung")
 if "showSession" not in st.session_state:
     st.session_state.showSession = 1
 
+
+# Add columns for buttons
 cl1, cl2, cl3 = st.columns([0.3, 1, 1])
+
+# Add buttons to the page
 button1_ph = cl1.button("Übersicht", on_click=lambda: st.session_state.__setitem__("showSession", 1),
                          help="Klicken Sie hier um zur Übersicht zu gelangen!")
 
@@ -25,126 +33,122 @@ button2_ph = cl2.button("Detailansicht", on_click=lambda: st.session_state.__set
 
 
 
-
+# Add a container to the page
 container = st.container()
+
+# Create a database object
 db = DB()
 
 
+# Load all book-names from the database
 buecher = db.query("SELECT name FROM Book")  # returns tuples
 buecher = [buch[0] for buch in buecher] if buecher else []
 
+# Create a selectbox to select a book
 selected_book = container.selectbox(label="Buch auswählen", key="key_ausg_Buch", index=0, options=buecher,
                                     help="Bitte hier das Buch auswählen das Sie anzeigen wollen!")
 
 
 
 
-#wenn Gruppen fertig sind dann hier einfügen
-#groups = db.query("SELECT groupname FROM Group")  # returns tuples
-#selected_group = container.selectbox(label="Gruppe auswählen", key="key_ausg_Gruppe", index=0, options=groups,
-#                                     help="Bitte hier die Gruppe auswählen die Sie anzeigen wollen!")
 
-#selected_group_id = db.query("SELECT groupID FROM Group WHERE groupname = ?", (selected_group,))
-
-
-
-# ------------------------------------------------------------------------------------------------------------------------------
+#++++++++++++++++++++++++++++++++++ÜBERSICHT+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def uebersicht():
-    st.header("Benotungsübersicht")
+
+    # Create a database object
     db = DB()
 
+    #visual appearance
+    container.divider()
+    st.header("Benotungsübersicht:")
+
+    
+    #sessionstate variables to selected book
     selected_book = st.session_state.key_ausg_Buch
     
+    #get the number of pages of the selected book
     seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
     seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
 
+
+    #get the book_id of the selected book
     book_id = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
     book_id = book_id[0][0]
         
   
     if seitenanz_aus_DB:
        
-
+        #load all groups from the database
         groups = db.load_groups()
-        #st.header(groups)
 
         for group in groups:
+            #create a dataframe for each group
             df_group = pd.DataFrame()
 
+            #get the group_id of the selected group
             group_id = Group(group).get_groupID()
-            #st.write("group_id")
-            #st.header(group_id)
 
            
-          
+            #get the kids in the selected group
             kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
-            #st.write("kids_in_group")
-            #st.header(kids_in_group)
-
+            
+            #get the kid_ids of the kids in the selected group
             kid_ids = db.query("SELECT kidID FROM Kid WHERE groupID = ?", (group_id,))
             
-            #st.write("kid_ids")
-            #st.header(kid_ids)
 
-
-
+            #create a new column for each page of the selected book
             for page in range(1, seitenanz_aus_DB + 1):
+
                 page_grades = []
 
 
-
+                #get the grades of the kids in the selected group for each page
                 for kid_id in kid_ids:
-                    #mache eine neue spalte für die noten von dieer seite
+                    
                     grade = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id[0], book_id, page))
+                    #if grade is present, append it to the list, else append an empty string
                     if grade:
                         page_grades.append(grade[0][0])
                     else:
-                        page_grades.append(None)
+                        page_grades.append("")
                 
-
+                #add the list of grades to the dataframe
                 df_group[f"S. {page}"] = page_grades
             
+            #insert the kid names as the first column
             df_group.insert(0, 'Kid Name', kids_in_group)  # Insert Kid Names as the first column
 
 
-
+            #visual appearance
             st.subheader(group)
+
+            #display the dataframe
             st.data_editor(
                     df_group,
                     hide_index=True,
                     disabled=df_group.columns,
                 )
-            st.caption(f"Hier sehen Sie die Noten der Kinder in der {group}.")
+            st.caption(f"Hier sehen Sie die Noten der Kinder in der {group} für das Fach {selected_book}.")
+
+
+
+            #export the dataframe to a csv file
+
+            #create file path for each group
+            file_path = f"C:\\Users\\sandr\\OneDrive\\Desktop\\test\\{group}_export.csv"
+
+            #create a button to export the dataframe to a csv file
+            if st.button(f"Export {group} to CSV", help="Klicken Sie hier um die Daten als CSV zu exportieren!"):
+                df_group.to_csv(file_path, sep='\t')
+                st.success(f"Data successfully exported to {file_path}")
+
+            #visual appearance
             st.divider()
         
+        #visual appearance
         st.caption("Die Spalten entsprechen den Seiten des Buches und die Zeilen den Kindern. Die Noten sind in den Zellen eingetragen. Wenn eine Zelle leer ist, hat das Kind die Seite noch nicht bewertet.")
 
             
-
-                
-
-      
-        
-
-        # Get dataframe row-selections from user with st.data_editor
-        #st.data_editor(
-        #    df,
-        #    hide_index=True,
-        #    disabled=df.columns,
-        #)
-
-        
-
-
-        # Open file explorer for user to choose file path
-        file_path = "C:\\Users\\sandr\\OneDrive\\Desktop\\test\\export.csv"
-
-        # Export the DataFrame to the specified file path
-        if st.button("Export to CSV"):
-            df.to_csv(file_path, sep='\t')
-            st.success(f"Data successfully exported to {file_path}")
-
-
     else:
         container.write("Das Buch hat keine Seitenanzahl.")
 
@@ -155,45 +159,37 @@ def uebersicht():
 
 
 
-#--------------------------------------------------------------------------------------------------------------------------------------
+#++++++++++++++++++++++++++++++++++DETAILANSICHT+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def detailansicht():
+    #database object
     db = DB()
 
 
-    #book_id = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
-    #book_id = book_id[0][0]
+    #group selection
+    selected_group = container.selectbox(label="Gruppe auswählen", key="key_ausg_Gruppe", index=0, options=db.load_groups(),
+                                            help="Bitte hier die Gruppe auswählen die Sie anzeigen wollen!")
+    
+    group_id = Group(selected_group).get_groupID()
 
 
-    kids = db.query("SELECT firstname, lastname FROM Kid " )     #returns tuples
-
-    if kids != []: 
-         kids = [kid[0]+" "+kid[1] for kid in kids]   #convert to list
-
-    selected_kid = container.selectbox(label="Kind auswählen", key="key_ausg_Kind", index=0, options=kids,
+    #kid selection
+    kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
+    
+    selected_kid = container.selectbox(label="Kind auswählen", key="key_ausg_Kind", index=0, options=kids_in_group,
                                             help="Bitte hier das Kind auswählen das Sie anzeigen wollen!")
     
-    #st.write("selected_kid")
-    #st.header(selected_kid)
+    #get kid names
     first_name = selected_kid.split(" ")[0]
     last_name = selected_kid.split(" ")[1]
     
-
+    #get kid_id
     kid_id = db.query("SELECT kidID FROM Kid WHERE firstname = ? AND lastname = ?", (first_name, last_name,))
     kid_id = kid_id[0][0]
-    #st.write("kid_id")
-    #st.header(kid_id)
+    
 
-
+    #book selection
     book_id_result = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
     book_id = book_id_result[0][0]
-    #st.write("Book_id")
-    #st.header(book_id)
-
-
-
-    
-    seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
-    seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
     
 
 
@@ -205,110 +201,105 @@ def detailansicht():
 
     #if count_pages == 0:
     #    count_pages = 1
-
+    
+    #get the number of pages of the selected book
+    seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
+    seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
+    
 
     #select first ungraded page
     last_graded_page = db.query("SELECT MAX(page) FROM Grade WHERE kidID = ? AND bookID = ?", (kid_id, book_id))
-    last_graded_page = last_graded_page[0][0] if last_graded_page and last_graded_page[0] else None
-    #st.header(last_graded_page)
+    last_graded_page = last_graded_page[0][0] 
+    if last_graded_page == None:
+        last_graded_page = 1
 
-
-    selected_page = container.number_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!", step=1, min_value=1, max_value=seitenanz_aus_DB)
+    #page selection, +1 for next page to grade
+    selected_page = container.number_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page+1, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!", step=1, min_value=1, max_value=seitenanz_aus_DB)
     
  
-
-    
-
+    #get the grade, comment, weight and date of the selected page
     grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id,selected_page))
-    #st.write("Grade")
-    #st.header(grade_result)
-
-    comment_result = db.query("SELECT comment FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
-    #st.write("Comment")
-    #st.header(comment_result)
-
-    weight_result = db.query("SELECT weight FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
-    #st.write("Weight")
-    #st.header(weight_result)
-
-    date_result = db.query("SELECT date FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
-    #st.write("Date")
-    #st.header(date_result)
-
-
     
+    comment_result = db.query("SELECT comment FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+    
+    weight_result = db.query("SELECT weight FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+    
+    date_result = db.query("SELECT date FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+    
+
+    #visual appearance
+    st.divider()
     st.header("Eingabe der Details:")
 
-    #INPUTS
 
+
+    #------------------------INPUTS---------------------------------------------------------------------
+    #if no grade is present, set grade_result to 1
     if grade_result==[]:
         grade_result = 1
     else:
         grade_result = grade_result[0][0]
-
+    #input for grade
     st.number_input(label = "Note", key="key_grade_input", value=grade_result, placeholder="Note", help="Bitte hier die Note eintragen!", step=1, min_value=1, max_value=5)
     
 
-    
+    #if no comment is present, set comment_result to None
     if comment_result==[]:
-        comment_result = None
+        comment_result = ""
     else:
         comment_result = comment_result[0][0]
+    #input for comment
     st.text_input(label="Kommentar", placeholder="Kommentar", help="Bitte hier ihren Kommentar eingeben", key="key_comment_input",value=comment_result)
     
 
+    #if no weight is present, set weight_result to 0.0
     if weight_result==[]:
         weight_result = 0.0
     else:
         weight_result = weight_result[0][0]
+    #input for weight
     st.number_input(label = "Gewichtung", key="key_weight_input", value=weight_result, placeholder="Gewichtung", help="Bitte hier die Gewichtung eintragen!", step=1.0, min_value=0.0, max_value=100.0)
     
 
-
+    #if no date is present, set date_result to today's date
     if date_result == []:
-        # If nothing is present, set today's date
         date_result = datetime.date.today()
-        #convert in datetime.date object
-        #st.header(date_result)
 
     else:
         # Extract the date string from the tuple
         date_result = date_result[0][0]
         date_string = date_result
-        #st.header(date_string)
         # Convert the date string to a datetime.date object
         date_result = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
 
-    # Now use date_input with the modified date_result
+    #input for date
     st.date_input(label="Datum", help="Bitte hier das Datum eingeben", key="key_date_input", value=date_result)
 
 
-
+    #------------------------BUTTONS---------------------------------------------------------------------
+    #buttons for saving, updating and deleting the grade
     button_col1, button_col2, button_col3 = st.columns(3)
 
 
-    if button_col3.button("Speichern"):
+    if button_col3.button("Speichern", help="Klicken Sie hier um die Note zu speichern!"):
         db.query("INSERT INTO Grade (kidID, bookID, page, grade, comment, weight, date) VALUES (?, ?, ?, ?, ?, ?, ?)", (kid_id, book_id, selected_page, st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input))
         st.success("Note erfolgreich gespeichert!")
 
 
-    if button_col1.button("Updaten"):
+    if button_col1.button("Updaten", help="Klicken Sie hier um die Note zu updaten!"):
         db.query("UPDATE Grade SET grade = ?, comment = ?, weight = ?, date = ? WHERE kidID = ? AND bookID = ? AND page = ?", (st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input, kid_id, book_id, selected_page))
         st.success("Erfolgreich geupdated")
 
-    if button_col2.button("Löschen"):
-        db.query("DELETE FROM Grade WHERE kidID = ?", (kid_id,))
+    if button_col2.button("Löschen", help="Klicken Sie hier um die Note zu löschen!"):
+        db.query("DELETE FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
         st.success("Erfolgreich gelöscht")
 
 
-        
-        
 
 
 
 
-
-#------------------------------------------------------------------------------------------------------------------------------
+#----------------------------SESSIONSTATES------------------------------------------------------------------------------------------
 if st.session_state.showSession == 1:
     uebersicht()
 
