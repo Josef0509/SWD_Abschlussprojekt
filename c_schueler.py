@@ -49,3 +49,6 @@ class Kid:
         db.__del__()
         grades = [grade[0] for grade in grades] #unpacking the list of tuples
         return grades
+    
+    def get_first_last_name(self):
+        return self.firstname, self.lastname
