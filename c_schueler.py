@@ -50,5 +50,12 @@ class Kid:
         grades = [grade[0] for grade in grades] #unpacking the list of tuples
         return grades
     
+    def get_weights_with_bookID(self, bookID:int):
+        db = DB()
+        weights = db.query("SELECT weight FROM Grade WHERE kidID = ? AND bookID = ?", (self.get_kid_ID(), bookID))
+        db.__del__()
+        weights = [weight[0] for weight in weights]
+        return weights
+    
     def get_first_last_name(self):
         return self.firstname, self.lastname

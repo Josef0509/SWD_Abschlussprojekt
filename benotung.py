@@ -7,6 +7,8 @@ from tkinter import filedialog
 import datetime
 from c_gruppen import Group
 import logging
+from c_benotung import gradeTOPercentage, percentageTOGrade
+from c_schueler import Kid
 
 #configure logfile
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
@@ -58,7 +60,7 @@ except Exception as e:
 selected_book = container.selectbox(label="Buch auswählen", key="key_ausg_Buch", index=0, options=buecher,
                                         help="Bitte hier das Buch auswählen das Sie anzeigen wollen!")
 
-
+db.__del__()
 
 
 #++++++++++++++++++++++++++++++++++ÜBERSICHT+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -170,7 +172,37 @@ def uebersicht():
                 )
             st.caption(f"Hier sehen Sie die Noten der Kinder in der {group} für das Fach {selected_book}.")
 
+            children = kids_in_group
+            possible_points = []
+            achieved_points = []
 
+            for kid in children:
+                first_name = kid.split(" ")[0]
+                last_name = kid.split(" ")[1]
+                kid_obj = Kid(first_name, last_name)
+                pp = kid_obj.get_weights_with_bookID(book_id)
+                possible_points.append(sum(pp))
+
+                grades = kid_obj.get_grades_with_bookID(book_id)
+                ap = []
+                for i,grade in enumerate(grades):
+                    ap.append(gradeTOPercentage(grade)/100*pp[i])
+                    
+                achieved_points.append(sum(ap))
+
+            #print(possible_points)
+            #print(achieved_points)
+                
+            lost_points = [possible_points[i] - achieved_points[i] for i in range(len(possible_points))]
+            
+            data = {
+                'Children': children,
+                'Possible Points': possible_points,
+                'erreichte Punkte': achieved_points,
+                'nicht erreichte Punkte': lost_points
+            }
+
+            st.bar_chart(data, use_container_width=True, x = 'Children', y= ['erreichte Punkte', 'nicht erreichte Punkte'], color = ["#39b035","#d44d44"])
 
             #export the dataframe to a csv file
 
@@ -198,6 +230,7 @@ def uebersicht():
     else:
         container.write("Das Buch hat keine Seitenanzahl.")
 
+    db.__del__()
     return 
             
     
@@ -320,17 +353,18 @@ def detailansicht():
     else:
         comment_result = comment_result[0][0]
     #input for comment
-    st.text_input(label="Kommentar", placeholder="Kommentar", help="Bitte hier ihren Kommentar eingeben", key="key_comment_input",value=comment_result)
+    st.text_area(label="Kommentar", placeholder="Kommentar", help="Bitte hier ihren Kommentar eingeben", key="key_comment_input",value=comment_result)
     
 
     #if no weight is present, set weight_result to 0.0
     if weight_result==[]:
-        weight_result = 0.0
+        weight_result = 100
     else:
         weight_result = weight_result[0][0]
     #input for weight
-    st.number_input(label = "Gewichtung", key="key_weight_input", value=weight_result, placeholder="Gewichtung", help="Bitte hier die Gewichtung eintragen!", step=1.0, min_value=0.0, max_value=100.0)
-    
+    st.slider(label="Gewichtung/Maximale Punkte", key="key_weight_input", value=weight_result, min_value=50, max_value=150, step=50, help="Bitte hier die Gewichtung eintragen! [**Leicht:** 50, **Normal:** 100, **Schwer:** 150] Diese entspricht der maximal erreichbaren Punkteanzahl.")
+  
+    st.write(F"Das Kind bekommt **{gradeTOPercentage(st.session_state.key_grade_input)/100*st.session_state.key_weight_input}** Punkte gutgeschrieben.")
 
     #if no date is present, set date_result to today's date
     if date_result == []:
@@ -362,7 +396,7 @@ def detailansicht():
         #seite neu laden
         st.experimental_rerun()
 
-
+    db.__del__()
 
 
 

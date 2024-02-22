@@ -6,6 +6,7 @@ import time
 from db import DB
 from c_schueler import Kid
 from c_buecher import Book
+from c_benotung import gradeTOPercentage, percentageTOGrade
 
 import pandas as pd
 import numpy as np
@@ -103,10 +104,26 @@ def uebersicht():
     for book in c_books:
         # Get grades for the current book
         grades = selected_kid.get_grades_with_bookID(book.get_ID())
-        # Assign grades to the dictionary with the book name as the key
-        grade_data[book.get_name()] = grades
+        weights = selected_kid.get_weights_with_bookID(book.get_ID())
 
-        container.write(F"**Fach:** {book.get_name()}: **Note:** {np.mean(grades).round(2) if grades != [] else 'Keine Noten vorhanden'}")        
+        grades_percentage = []
+        for grade in grades:
+            grades_percentage.append(gradeTOPercentage(grade))
+
+        # Assign grades to the dictionary with the book name as the key
+        grade_data[book.get_name()] = grades_percentage
+
+        possible_points = sum(weights)
+        achieved_points = sum([a*b/100 for a,b in zip(grades_percentage, weights)])
+        try:
+            percentage = achieved_points*100/possible_points
+        except ZeroDivisionError:
+            percentage = 0
+
+        if grades != []:
+            container.write(F"**Fach:** {book.get_name()}: **Note: {np.round(percentageTOGrade(percentage),3)}**  [{possible_points} / {achieved_points} Punkten erreicht = {np.round(percentage,2)}%]")
+        else:
+            container.write(F"**Fach:** {book.get_name()}: **Note: -**")      
 
     #fill the dictionary with the same length#
     max_len = max([len(grade_data[book]) for book in grade_data])
