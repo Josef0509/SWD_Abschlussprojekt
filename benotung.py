@@ -6,6 +6,11 @@ from db import DB
 from tkinter import filedialog
 import datetime
 from c_gruppen import Group
+import logging
+
+#configure logfile
+logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
+logging.info('Benotung ausgewaehlt')
 
 
 # Configuration of the page
@@ -39,15 +44,19 @@ container = st.container()
 # Create a database object
 db = DB()
 
+try:
+    # Load all book-names from the database
+    buecher = db.query("SELECT name FROM Book")  # returns tuples
+    buecher = [buch[0] for buch in buecher] if buecher else []
 
-# Load all book-names from the database
-buecher = db.query("SELECT name FROM Book")  # returns tuples
-buecher = [buch[0] for buch in buecher] if buecher else []
+except Exception as e:
+    logging.exception('Fehler beim Laden der Bücher!')
+    st.text("Fehler beim Laden der Bücher!")
+
 
 # Create a selectbox to select a book
 selected_book = container.selectbox(label="Buch auswählen", key="key_ausg_Buch", index=0, options=buecher,
-                                    help="Bitte hier das Buch auswählen das Sie anzeigen wollen!")
-
+                                        help="Bitte hier das Buch auswählen das Sie anzeigen wollen!")
 
 
 
@@ -56,9 +65,13 @@ selected_book = container.selectbox(label="Buch auswählen", key="key_ausg_Buch"
 def uebersicht():
 
     # Create a database object
-    db = DB()
-
+    try:
+        db = DB()
+    except Exception as e:
+        logging.exception('Fehler beim Laden der Datenbank!')
+        st.text("Fehler beim Laden der Datenbank!")
     #visual appearance
+        
     container.divider()
     st.header("Benotungsübersicht:")
 
@@ -66,35 +79,57 @@ def uebersicht():
     #sessionstate variables to selected book
     selected_book = st.session_state.key_ausg_Buch
     
-    #get the number of pages of the selected book
-    seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
-    seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
-
-
-    #get the book_id of the selected book
-    book_id = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
-    book_id = book_id[0][0]
+    try: 
+        #get the number of pages of the selected book
+        seitenanz_aus_DB = db.get_seitenanzahl(selected_book)
         
+    except Exception as e:
+        logging.exception('Fehler bei der Übergabe der Seitenanzahl des Buches!')
+        st.text("Fehler bei der Übergabe der Seitenanzahl des Buches!")
+
+    try:
+        #get the book_id of the selected book
+        book_id = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
+        book_id = book_id[0][0]
+    except Exception as e:
+        logging.exception('Fehler bei der Übergabe der BuchID des Buches!')
+        st.text("Fehler bei der Übergabe der BuchID des Buches!") 
   
     if seitenanz_aus_DB:
        
         #load all groups from the database
-        groups = db.load_groups()
+        try:
+            groups = db.load_groups()
+        except Exception as e:
+            logging.exception('Fehler beim Laden der Gruppen!')
+            st.write("Fehler bem Laden der Gruppen!")
 
         for group in groups:
+            
             #create a dataframe for each group
             df_group = pd.DataFrame()
 
-            #get the group_id of the selected group
-            group_id = Group(group).get_groupID()
-
+            try:
+                #get the group_id of the selected group
+                group_id = Group(group).get_groupID()
+            except Exception as e:
+                logging.exception('Fehler beim Laden der GruppenID!')
+                st.write("Fehler beim Laden der GruppenID!")
            
-            #get the kids in the selected group
-            kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
-            
-            #get the kid_ids of the kids in the selected group
-            kid_ids = db.query("SELECT kidID FROM Kid WHERE groupID = ?", (group_id,))
-            
+
+            try:
+                #get the kids in the selected group
+                kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
+            except:
+                logging.exception('Fehler beim Laden der Kinder in der Gruppe!')
+                st.write("Fehler beim Laden der Kinder in der Gruppe!")
+
+            try:
+                #get the kid_ids of the kids in the selected group
+                kid_ids = db.query("SELECT kidID FROM Kid WHERE groupID = ?", (group_id,))
+            except Exception as e:
+                logging.exception('Fehler beim Laden der KidID!')
+                st.write("Fehler beim Laden der KidID")
 
             #create a new column for each page of the selected book
             for page in range(1, seitenanz_aus_DB + 1):
@@ -105,7 +140,12 @@ def uebersicht():
                 #get the grades of the kids in the selected group for each page
                 for kid_id in kid_ids:
                     
-                    grade = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id[0], book_id, page))
+                    try:
+                        grade = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id[0], book_id, page))
+                    except Exception as e:
+                        logging.exception('Fehler beim Laden der Noten!')
+                        st.write("Fehler beim Laden der Noten!")
+
                     #if grade is present, append it to the list, else append an empty string
                     if grade:
                         page_grades.append(grade[0][0])
@@ -137,16 +177,22 @@ def uebersicht():
             #create file path for each group
             file_path = f"C:\\Users\\sandr\\OneDrive\\Desktop\\test\\{group}_export.csv"
 
-            #create a button to export the dataframe to a csv file
-            if st.button(f"Export {group} to CSV", help="Klicken Sie hier um die Daten als CSV zu exportieren!"):
-                df_group.to_csv(file_path, sep='\t')
-                st.success(f"Data successfully exported to {file_path}")
+            try:
+
+                #create a button to export the dataframe to a csv file
+                if st.button(f"Export {group} to CSV", help="Klicken Sie hier um die Daten als CSV zu exportieren!"):
+                    df_group.to_csv(file_path, sep='\t')
+                    st.success(f"Data successfully exported to {file_path}")
+
+            except Exception as e:
+                logging.exception('Fehler beim Exportieren als CSV!')
+                st.write("Fehler beim Exportieren als CSV!")
 
             #visual appearance
             st.divider()
         
         #visual appearance
-        st.caption("Die Spalten entsprechen den Seiten des Buches und die Zeilen den Kindern. Die Noten sind in den Zellen eingetragen. Wenn eine Zelle leer ist, hat das Kind die Seite noch nicht bewertet.")
+        st.caption("Die Spalten entsprechen den Seiten des Buches und die Zeilen den Kindern. Die Noten sind in den Zellen eingetragen. Wenn eine Zelle leer ist, hwurde die Seite noch nicht bewertet.")
 
             
     else:
@@ -157,23 +203,33 @@ def uebersicht():
     
 
 
-
-
 #++++++++++++++++++++++++++++++++++DETAILANSICHT+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def detailansicht():
     #database object
-    db = DB()
+    try:
+        db = DB()
+    except Exception as e:
+        logging.exception('Fehler beim Laden der Datenbank!')
+        st.write("Fehler beim Laden der Datenbank!")
 
 
     #group selection
     selected_group = container.selectbox(label="Gruppe auswählen", key="key_ausg_Gruppe", index=0, options=db.load_groups(),
                                             help="Bitte hier die Gruppe auswählen die Sie anzeigen wollen!")
     
-    group_id = Group(selected_group).get_groupID()
+    try:
 
+        group_id = Group(selected_group).get_groupID()
+    except Exception as e:
+        logging.exception('Fehler beim Laden der GruppenID!')
+        st.write("Fehler beim Laden der GruppenID!")
 
-    #kid selection
-    kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
+    try:
+        #kid selection
+        kids_in_group, kids_nowhere = db.load_kids_in_group_or_available(group_id)
+    except Exception as e:
+        logging.exception('Fehler beim Laden der Kinder in der Gruppe!')
+        st.write("Fehler beim Laden der Kinder in der Gruppe!")
     
     selected_kid = container.selectbox(label="Kind auswählen", key="key_ausg_Kind", index=0, options=kids_in_group,
                                             help="Bitte hier das Kind auswählen das Sie anzeigen wollen!")
@@ -182,14 +238,21 @@ def detailansicht():
     first_name = selected_kid.split(" ")[0]
     last_name = selected_kid.split(" ")[1]
     
-    #get kid_id
-    kid_id = db.query("SELECT kidID FROM Kid WHERE firstname = ? AND lastname = ?", (first_name, last_name,))
-    kid_id = kid_id[0][0]
+    try:
+        #get kid_id
+        kid_id = db.query("SELECT kidID FROM Kid WHERE firstname = ? AND lastname = ?", (first_name, last_name,))
+        kid_id = kid_id[0][0]
+    except Exception as e:
+        logging.exception('Fehler beim Laden der KidID!')
+        st.write("Fehler beim Laden der KidID!")
     
-
-    #book selection
-    book_id_result = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
-    book_id = book_id_result[0][0]
+    
+    try:#book selection
+        book_id_result = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
+        book_id = book_id_result[0][0]
+    except Exception as e:
+        logging.exception('Fehler beim Laden der BuchID!')
+        st.write("Fehler beim Laden der BuchID!")
     
 
 
@@ -202,15 +265,24 @@ def detailansicht():
     #if count_pages == 0:
     #    count_pages = 1
     
-    #get the number of pages of the selected book
-    seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
-    seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
+    try:
+        #get the number of pages of the selected book
+        seitenanz_aus_DB = db.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
+        seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
+    except Exception as e:
+        logging.exception('Fehler bei der Übergabe der Seitenanzahl des Buches!')
+        st.write("Fehler bei der Übergabe der Seitenanzahl des Buches!")
+    
 
     #select first ungraded page
     last_graded_page = db.query("SELECT MAX(page) FROM Grade WHERE kidID = ? AND bookID = ?", (kid_id, book_id))
     last_graded_page = last_graded_page[0][0] 
     if last_graded_page == None:
         last_graded_page = 1
+
+    #größer als seitananzahl
+    if last_graded_page + 1 > seitenanz_aus_DB:
+        last_graded_page = seitenanz_aus_DB-1
 
     #page selection, +1 for next page to grade
     selected_page = container.number_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page+1, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!", step=1, min_value=1, max_value=seitenanz_aus_DB)
@@ -281,20 +353,14 @@ def detailansicht():
 
 
     if button_col1.button("Speichern", help="Klicken Sie hier um die Note zu speichern!"):
-        grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
-        if grade_result:
-            db.query("UPDATE Grade SET grade = ?, comment = ?, weight = ?, date = ? WHERE kidID = ? AND bookID = ? AND page = ?", (st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input, kid_id, book_id, selected_page))
-            st.success("Erfolgreich geupdated")
-        else:
-            db.query("INSERT INTO Grade (kidID, bookID, page, grade, comment, weight, date) VALUES (?, ?, ?, ?, ?, ?, ?)", (kid_id, book_id, selected_page, st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input))
-            st.success("Note erfolgreich gespeichert!")
+        db.update_or_save_grade(kid_id, book_id, selected_page, st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input)
 
         
 
     if button_col2.button("Löschen", help="Klicken Sie hier um die Note zu löschen!"):
-        db.query("DELETE FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
-        st.success("Erfolgreich gelöscht")
-
+        db.delete_grade(kid_id, book_id, selected_page)
+        #seite neu laden
+        st.experimental_rerun()
 
 
 
