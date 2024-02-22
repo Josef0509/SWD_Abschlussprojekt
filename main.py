@@ -1,6 +1,5 @@
 import streamlit as st
 import st_pages as stp
-import streamlit_authenticator as stauth
 from db import DB
 from encode import hash
 import logging

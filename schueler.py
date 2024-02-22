@@ -5,6 +5,8 @@ import numpy as np
 import time
 from db import DB
 from c_schueler import Kid
+from c_buecher import Book
+from c_benotung import gradeTOPercentage, percentageTOGrade
 
 import pandas as pd
 import numpy as np
@@ -87,44 +89,70 @@ def uebersicht():
     db = DB()
     kids = db.load_kids()    
     container.selectbox(label="Kind auswählen",key="key_ausg_Kind", index=0, options=kids, help="Bitte hier das Kind auswählen das Sie anzeigen wollen!")
-    
     books = db.load_books()
     db.__del__()
 
+    c_books = []
+    for book in books:
+        c_books.append(Book(book))
 
-    chart_data = pd.DataFrame(np.random.randn(20, 3), columns=books)
+    selected_kid = Kid(st.session_state.key_ausg_Kind.split(" ")[0], st.session_state.key_ausg_Kind.split(" ")[1])
 
-    container.line_chart(chart_data)
-    container.write("Aktuelle Noten:")
-    #notenstand ermitteln
-    container.write("Fach 1: 1.45")
-    container.write("Fach 2: 2.01")
-    container.write("Fach 3: 3.23")
+    grade_data = {}
+
+    # Iterate through each book
+    for book in c_books:
+        # Get grades for the current book
+        grades = selected_kid.get_grades_with_bookID(book.get_ID())
+        weights = selected_kid.get_weights_with_bookID(book.get_ID())
+
+        grades_percentage = []
+        for grade in grades:
+            grades_percentage.append(gradeTOPercentage(grade))
+
+        # Assign grades to the dictionary with the book name as the key
+        grade_data[book.get_name()] = grades_percentage
+
+        possible_points = sum(weights)
+        achieved_points = sum([a*b/100 for a,b in zip(grades_percentage, weights)])
+        try:
+            percentage = achieved_points*100/possible_points
+        except ZeroDivisionError:
+            percentage = 0
+
+        if grades != []:
+            container.write(F"**Fach:** {book.get_name()}: **Note: {np.round(percentageTOGrade(percentage),3)}**  [{possible_points} / {achieved_points} Punkten erreicht = {np.round(percentage,2)}%]")
+        else:
+            container.write(F"**Fach:** {book.get_name()}: **Note: -**")      
+
+    #fill the dictionary with the same length#
+    max_len = max([len(grade_data[book]) for book in grade_data])
+    for book in grade_data:
+        while len(grade_data[book]) < max_len:
+            grade_data[book].append(None)
+    
+
+    # Create DataFrame from the dictionary
+    df = pd.DataFrame(grade_data)
+
+    container.line_chart(df)
 
     # Create the line chart
     plt.figure(figsize=(10, 6))
-    for book in books:
-        plt.plot(chart_data.index, chart_data[book], label=book)
+    plt.plot(df)
     plt.xlabel('Index')
     plt.ylabel('Values')
-    plt.title('Chart Data')
-    plt.legend()
+    plt.title(f'Notenübersicht: {st.session_state.key_ausg_Kind.split(" ")[0]} {st.session_state.key_ausg_Kind.split(" ")[1]}')
+    plt.legend(df.columns, loc='upper right')
 
     # Export the chart to PDF
-    plt.savefig('chart_data.pdf')
-
-    container.download_button(
-    label="Exportieren",
-    data=chart_data.to_csv().encode('utf-8'),
-    file_name='exportNoten.csv',
-    mime='text/csv',
-    )
+    plt.savefig('Notenuebersicht.pdf')
 
     # Provide download button for the PDF
     container.download_button(
         label="Chart Exportieren",
-        data=open('chart_data.pdf', 'rb').read(),
-        file_name='chart_data.pdf',
+        data=open('Notenuebersicht.pdf', 'rb').read(),
+        file_name='Notenuebersicht.pdf',
         mime='application/pdf',
     )
 
