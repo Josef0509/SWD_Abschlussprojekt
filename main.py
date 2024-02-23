@@ -33,13 +33,14 @@ def login_pressed(name:str, password:str):
     # Load the credentials from the database
     db = DB()
     db_usernames, db_passwords = db.get_credentials()
-    db.__del__()
-
+    
     # Get the hexadecimal representation of the hashed password
     hashed_password = hash(password)
 
     if name in db_usernames and hashed_password == db_passwords[db_usernames.index(name)]:
         st.session_state.logged_in = True
+        db.set_User_in_Session(name)
+        db.__del__()
         logging.info(f"User {name} logged in.")
         
     else:
