@@ -113,15 +113,25 @@ def uebersicht():
         grades = selected_kid.get_grades_with_bookID(book.get_ID())
         weights = selected_kid.get_weights_with_bookID(book.get_ID())
 
+        ap = []
+        pp = []
+
         grades_percentage = []
-        for grade in grades:
-            grades_percentage.append(gradeTOPercentage(grade))
+        for i,grade in enumerate(grades):
+            percentage = gradeTOPercentage(grade)
+            if percentage is float or int:
+                grades_percentage.append(percentage)
+                ap.append(percentage/100*weights[i])
+                pp.append(weights[i])
+            else:
+                pass    #ignore K's
+
+        possible_points = sum(pp)
+        achieved_points = sum(ap)
 
         # Assign grades to the dictionary with the book name as the key
         grade_data[book.get_name()] = grades_percentage
 
-        possible_points = sum(weights)
-        achieved_points = sum([a*b/100 for a,b in zip(grades_percentage, weights)])
         try:
             percentage = achieved_points*100/possible_points
         except ZeroDivisionError:
