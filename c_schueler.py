@@ -2,10 +2,11 @@
 from db import DB
 
 class Kid:
-    def __init__(self, firstname:str, lastname:str, groupID:int = None):
+    def __init__(self, firstname:str, lastname:str, groupID:int = None, textfield = None):
         self.firstname = firstname
         self.lastname = lastname
         self.groupID = groupID
+        self.textfield = textfield
 
     def __str__(self):
         return F"Vorname: {self.firstname}, Nachname: {self.lastname}"
@@ -59,3 +60,15 @@ class Kid:
     
     def get_first_last_name(self):
         return self.firstname, self.lastname
+    
+    def get_textfield(self):
+        db = DB()
+        textfield = db.query("SELECT textfield FROM Kid WHERE firstname = ? AND lastname = ?", (self.firstname, self.lastname))
+        db.__del__()
+        return textfield[0][0]
+    
+    def set_textfield(self, textfield:str):
+        db = DB()
+        self.textfield = textfield
+        db.query("UPDATE Kid SET textfield = ? WHERE firstname = ? AND lastname = ?", (self.textfield, self.firstname, self.lastname))
+        db.__del__()

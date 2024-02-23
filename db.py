@@ -67,22 +67,22 @@ class DB:
     
     #load group
 
-    def update_or_save_grade(self, kid_id, book_id, selected_page, grade_input, comment_input, weight_input, date_input):
-        grade_result = self.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+    def update_or_save_grade(self, kid_id, book_id, assignment_id, grade_input, comment_input, weight_input, date_input):
+        grade_result = self.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_id))
 
         if grade_result:
-            self.query("UPDATE Grade SET grade = ?, comment = ?, weight = ?, date = ? WHERE kidID = ? AND bookID = ? AND page = ?", 
-                           (grade_input, comment_input, weight_input, date_input, kid_id, book_id, selected_page))
+            self.query("UPDATE Grade SET grade = ?, comment = ?, weight = ?, date = ? WHERE kidID = ? AND bookID = ? AND assignmentID = ?", 
+                           (grade_input, comment_input, weight_input, date_input, kid_id, book_id, assignment_id))
             st.success("Note erfolgreich geupdated!")
             return "Erfolgreich geupdated"
         else:
-            self.query("INSERT INTO Grade (kidID, bookID, page, grade, comment, weight, date) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-                          (kid_id, book_id, selected_page, grade_input, comment_input, weight_input, date_input))
+            self.query("INSERT INTO Grade (kidID, bookID, assignmentID, grade, comment, weight, date) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+                          (kid_id, book_id, assignment_id, grade_input, comment_input, weight_input, date_input))
             st.success("Note erfolgreich gespeichert!")
             return "Note erfolgreich gespeichert!"
         
-    def delete_grade(self, kid_id, book_id, selected_page):
-        self.query("DELETE FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+    def delete_grade(self, kid_id, book_id, assignment_id):
+        self.query("DELETE FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_id))
         st.success("Erfolgreich gelöscht")
         
         return "Note erfolgreich gelöscht!"
@@ -92,3 +92,8 @@ class DB:
         seitenanz_aus_DB = self.query("SELECT pages FROM Book WHERE name = ?", (selected_book,))
         seitenanz_aus_DB = seitenanz_aus_DB[0][0] if seitenanz_aus_DB and seitenanz_aus_DB[0] else None
         return seitenanz_aus_DB
+    
+    def get_assignment_IDs(self, bookID:str):
+        assignment_IDs = self.query("SELECT assignmentID FROM Assignment WHERE bookID = ?", (bookID,))
+        assignment_IDs = [assignment_ID[0] for assignment_ID in assignment_IDs]
+        return assignment_IDs

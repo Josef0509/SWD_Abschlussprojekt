@@ -38,6 +38,11 @@ class Grade:
 
 #converts grade to percentage
 def gradeTOPercentage(grade: int) -> float:
+    try:
+        grade = int(grade)  #grade is a string in the db, convert it to int if possible, otherwise it is K (krank)
+    except:
+        return grade
+
     if grade < 1 or grade > 5:
         raise ValueError("Grade must be between 1 and 5.")
     
