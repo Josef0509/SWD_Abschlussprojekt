@@ -67,20 +67,29 @@ class DB:
     
     #load group
 
-    def update_or_save_grade(self, kid_id, book_id, assignment_id, grade_input, comment_input, weight_input, date_input):
+    def update_or_save_grade(self, kid_id, book_id, assignment_id, grade_input, comment_input, weight_input, date_input, assignment_description_input):
         grade_result = self.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_id))
 
         if grade_result:
             self.query("UPDATE Grade SET grade = ?, comment = ?, weight = ?, date = ? WHERE kidID = ? AND bookID = ? AND assignmentID = ?", 
                            (grade_input, comment_input, weight_input, date_input, kid_id, book_id, assignment_id))
             st.success("Note erfolgreich geupdated!")
+
+            self.query("UPDATE Assignment SET description = ? WHERE assignmentID = ?", (assignment_description_input, assignment_id))
+            st.success("Beschreibung erfolgreich geupdated!")
             return "Erfolgreich geupdated"
+        
         else:
             self.query("INSERT INTO Grade (kidID, bookID, assignmentID, grade, comment, weight, date) VALUES (?, ?, ?, ?, ?, ?, ?)", 
                           (kid_id, book_id, assignment_id, grade_input, comment_input, weight_input, date_input))
             st.success("Note erfolgreich gespeichert!")
+
+            self.query("UPDATE Assignment SET description = ? WHERE assignmentID = ?", (assignment_description_input, assignment_id))
+            st.success("Beschreibung erfolgreich gespeichert!")
             return "Note erfolgreich gespeichert!"
         
+
+
     def delete_grade(self, kid_id, book_id, assignment_id):
         self.query("DELETE FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_id))
         st.success("Erfolgreich gelöscht")

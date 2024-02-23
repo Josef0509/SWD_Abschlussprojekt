@@ -275,6 +275,8 @@ def detailansicht():
     selected_kid = container.selectbox(label="Kind auswählen", key="key_ausg_Kind", index=0, options=kids_in_group,
                                             help="Bitte hier das Kind auswählen das Sie anzeigen wollen!")
     
+    
+
     #get kid names
     first_name = selected_kid.split(" ")[0]
     last_name = selected_kid.split(" ")[1]
@@ -328,6 +330,11 @@ def detailansicht():
     #page selection, +1 for next page to grade
     selected_assignment_name = container.text_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page+1, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!")
     
+
+
+
+
+
     #get all assignment names of the selected book
     assignment_names = db.query("SELECT name FROM Assignment WHERE bookID = ?", (book_id,))
     assignment_names = [assignment[0] for assignment in assignment_names] if assignment_names else []
@@ -347,6 +354,9 @@ def detailansicht():
 
 
     #get the grade, comment, weight and date of the selected page
+
+    assignment_description = db.query("SELECT description FROM Assignment WHERE assignmentID = ?", (assignment_ID,))
+
     grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id,assignment_ID))
     
     comment_result = db.query("SELECT comment FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
@@ -363,6 +373,16 @@ def detailansicht():
 
 
     #------------------------INPUTS---------------------------------------------------------------------
+
+    if assignment_description==[]:
+        assignment_description = ""
+    else:
+        assignment_description = assignment_description[0][0]
+    #input for assignment description
+    st.text_area(label="Aufgabenbeschreibung", placeholder="Aufgabenbeschreibung", help="Bitte hier die Aufgabenbeschreibung eingeben", key="key_assignment_description_input", value=assignment_description)
+
+
+
     #if no grade is present, set grade_result to 1
     if grade_result==[]:
         grade_result = "1"
@@ -373,6 +393,8 @@ def detailansicht():
     st.toggle(label="Krank", key="key_K_input", value=False, help="Klicken Sie hier wenn das Kind krank war!")
 
     if st.session_state.key_K_input == False:
+        if grade_result == "K":
+            grade_result = 1
         st.number_input(label = "Note", key="key_grade_input", value=int(grade_result), placeholder="Note", help="Bitte hier die Note eintragen!", step=1, min_value=1, max_value=5)
         grade_input = st.session_state.key_grade_input
     else:
@@ -403,6 +425,8 @@ def detailansicht():
         weight_input = 999
 
     else:
+        if weight_result == 999:
+            weight_result = 100
         st.slider(label="Gewichtung/Maximale Punkte", key="key_weight_input", value=weight_result, min_value=50, max_value=150, step=50, help="Bitte hier die Gewichtung eintragen! [**Leicht:** 50, **Normal:** 100, **Schwer:** 150] Diese entspricht der maximal erreichbaren Punkteanzahl.")
         st.write(F"Das Kind bekommt **{gradeTOPercentage(st.session_state.key_grade_input)/100*st.session_state.key_weight_input}** Punkte gutgeschrieben.")
         weight_input = st.session_state.key_weight_input
@@ -428,7 +452,7 @@ def detailansicht():
 
 
     if button_col1.button("Speichern", help="Klicken Sie hier um die Note zu speichern!"):
-        db.update_or_save_grade(kid_id, book_id, assignment_ID, grade_input, st.session_state.key_comment_input, weight_input, st.session_state.key_date_input)
+        db.update_or_save_grade(kid_id, book_id, assignment_ID, grade_input, st.session_state.key_comment_input, weight_input, st.session_state.key_date_input, st.session_state.key_assignment_description_input)
         #seite neu laden
         st.experimental_rerun()
         
