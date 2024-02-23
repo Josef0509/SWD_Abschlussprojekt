@@ -326,9 +326,23 @@ def detailansicht():
         last_graded_page = seitenanz_aus_DB-1
 
     #page selection, +1 for next page to grade
-    assignment_name = container.text_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page+1, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!")
+    selected_assignment_name = container.text_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page+1, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!")
     
-    assignment_ID = db.query("SELECT assignmentID FROM Assignment WHERE bookID = ? AND name = ?", (book_id, assignment_name))
+    #get all assignment names of the selected book
+    assignment_names = db.query("SELECT name FROM Assignment WHERE bookID = ?", (book_id,))
+    assignment_names = [assignment[0] for assignment in assignment_names] if assignment_names else []
+
+    if selected_assignment_name not in assignment_names:
+        st.write("Die Seite existiert nicht.")
+        st.button("Aufgabe hinzufügen", help="Klicken Sie hier um eine neue Aufgabe hinzuzufügen!", key="key_add_assignment")
+        if st.session_state.key_add_assignment:
+            db.query("INSERT INTO Assignment (bookID, name) VALUES (?, ?)", (book_id, selected_assignment_name))
+            st.experimental_rerun()
+        
+
+
+
+    assignment_ID = db.query("SELECT assignmentID FROM Assignment WHERE bookID = ? AND name = ?", (book_id, selected_assignment_name))
     assignment_ID = assignment_ID[0][0] if assignment_ID and assignment_ID[0] else None
 
 
