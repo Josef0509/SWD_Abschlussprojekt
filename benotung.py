@@ -9,6 +9,7 @@ from c_gruppen import Group
 import logging
 from c_benotung import gradeTOPercentage, percentageTOGrade
 from c_schueler import Kid
+from c_buecher import Book
 
 #configure logfile
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
@@ -80,24 +81,19 @@ def uebersicht():
     
     #sessionstate variables to selected book
     selected_book = st.session_state.key_ausg_Buch
+    selected_book = Book(selected_book)
+    selected_book_ID = selected_book.get_ID()
     
     try: 
         #get the number of pages of the selected book
-        seitenanz_aus_DB = db.get_seitenanzahl(selected_book)
+        assignmentIDs = db.get_assignment_IDs(selected_book_ID)
         
     except Exception as e:
         logging.exception('Fehler bei der Übergabe der Seitenanzahl des Buches!')
         st.text("Fehler bei der Übergabe der Seitenanzahl des Buches!")
 
-    try:
-        #get the book_id of the selected book
-        book_id = db.query("SELECT bookID FROM Book WHERE name = ?", (selected_book,))
-        book_id = book_id[0][0]
-    except Exception as e:
-        logging.exception('Fehler bei der Übergabe der BuchID des Buches!')
-        st.text("Fehler bei der Übergabe der BuchID des Buches!") 
   
-    if seitenanz_aus_DB:
+    if assignmentIDs:
        
         #load all groups from the database
         try:
@@ -134,16 +130,18 @@ def uebersicht():
                 st.write("Fehler beim Laden der KidID")
 
             #create a new column for each page of the selected book
-            for page in range(1, seitenanz_aus_DB + 1):
+            for assignmentID in assignmentIDs:
 
                 page_grades = []
+                assignmentName = db.query("SELECT name FROM Assignment WHERE assignmentID = ?", (assignmentID,))
+                assignmentName = assignmentName[0][0] if assignmentName and assignmentName[0] else None
 
 
                 #get the grades of the kids in the selected group for each page
                 for kid_id in kid_ids:
                     
                     try:
-                        grade = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id[0], book_id, page))
+                        grade = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id[0], selected_book_ID, assignmentID))
                     except Exception as e:
                         logging.exception('Fehler beim Laden der Noten!')
                         st.write("Fehler beim Laden der Noten!")
@@ -155,7 +153,7 @@ def uebersicht():
                         page_grades.append("")
                 
                 #add the list of grades to the dataframe
-                df_group[f"S. {page}"] = page_grades
+                df_group[assignmentName] = page_grades
             
             #insert the kid names as the first column
             df_group.insert(0, 'Kid Name', kids_in_group)  # Insert Kid Names as the first column
@@ -180,14 +178,21 @@ def uebersicht():
                 first_name = kid.split(" ")[0]
                 last_name = kid.split(" ")[1]
                 kid_obj = Kid(first_name, last_name)
-                pp = kid_obj.get_weights_with_bookID(book_id)
-                possible_points.append(sum(pp))
 
-                grades = kid_obj.get_grades_with_bookID(book_id)
+                weights = kid_obj.get_weights_with_bookID(selected_book_ID)
+                grades = kid_obj.get_grades_with_bookID(selected_book_ID)
+
                 ap = []
+                pp = []
                 for i,grade in enumerate(grades):
-                    ap.append(gradeTOPercentage(grade)/100*pp[i])
-                    
+                    percentage = gradeTOPercentage(grade)
+                    if percentage is float or int:
+                        ap.append(percentage/100*weights[i])
+                        pp.append(weights[i])
+                    else:
+                        pass    #ignore K's
+
+                possible_points.append(sum(pp))
                 achieved_points.append(sum(ap))
 
             #print(possible_points)
@@ -308,7 +313,7 @@ def detailansicht():
     
 
     #select first ungraded page
-    last_graded_page = db.query("SELECT MAX(page) FROM Grade WHERE kidID = ? AND bookID = ?", (kid_id, book_id))
+    last_graded_page = db.query("SELECT MAX(assignmentID) FROM Grade WHERE kidID = ? AND bookID = ?", (kid_id, book_id))
     last_graded_page = last_graded_page[0][0] 
     if last_graded_page == None:
         last_graded_page = 1
@@ -318,17 +323,20 @@ def detailansicht():
         last_graded_page = seitenanz_aus_DB-1
 
     #page selection, +1 for next page to grade
-    selected_page = container.number_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page+1, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!", step=1, min_value=1, max_value=seitenanz_aus_DB)
+    assignment_name = container.text_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page+1, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!")
     
- 
+    assignment_ID = db.query("SELECT assignmentID FROM Assignment WHERE bookID = ? AND name = ?", (book_id, assignment_name))
+    assignment_ID = assignment_ID[0][0] if assignment_ID and assignment_ID[0] else None
+
+
     #get the grade, comment, weight and date of the selected page
-    grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id,selected_page))
+    grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id,assignment_ID))
     
-    comment_result = db.query("SELECT comment FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+    comment_result = db.query("SELECT comment FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
     
-    weight_result = db.query("SELECT weight FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+    weight_result = db.query("SELECT weight FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
     
-    date_result = db.query("SELECT date FROM Grade WHERE kidID = ? AND bookID = ? AND page = ?", (kid_id, book_id, selected_page))
+    date_result = db.query("SELECT date FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
     
 
     #visual appearance
@@ -387,12 +395,12 @@ def detailansicht():
 
 
     if button_col1.button("Speichern", help="Klicken Sie hier um die Note zu speichern!"):
-        db.update_or_save_grade(kid_id, book_id, selected_page, st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input)
+        db.update_or_save_grade(kid_id, book_id, assignment_ID, st.session_state.key_grade_input, st.session_state.key_comment_input, st.session_state.key_weight_input, st.session_state.key_date_input)
 
         
 
     if button_col2.button("Löschen", help="Klicken Sie hier um die Note zu löschen!"):
-        db.delete_grade(kid_id, book_id, selected_page)
+        db.delete_grade(kid_id, book_id, assignment_ID)
         #seite neu laden
         st.experimental_rerun()
 
