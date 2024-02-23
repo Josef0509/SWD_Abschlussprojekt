@@ -84,6 +84,13 @@ def button_speichern_clicked():
     else:
         st.error("Bitte wählen Sie ein Kind aus!")
 
+def button_notizen_speichern_clicked():
+
+    selected_kid = Kid(st.session_state.key_ausg_Kind.split(" ")[0], st.session_state.key_ausg_Kind.split(" ")[1])
+    textfield = st.session_state.key_notizen
+    selected_kid.set_textfield(textfield)
+    st.success("Notizen wurden gespeichert!")
+
 
 def uebersicht():
     db = DB()
@@ -155,6 +162,13 @@ def uebersicht():
         file_name='Notenuebersicht.pdf',
         mime='application/pdf',
     )
+
+    notizen_aus_DB = selected_kid.get_textfield()
+
+    container.text_area(label="Notizen", key="key_notizen", value=notizen_aus_DB, help="Hier können Sie Notizen zu dem Kind machen!")
+
+    container.button(label="Notizen speichern", on_click=button_notizen_speichern_clicked, help="Klicken Sie hier um die Notizen zu speichern!")
+
 
 def anlegen():
     container.text_input(label="Vorname", key="key_vorname_schueler", placeholder="Vorname des Kindes", help="Bitte hier den Vornamen des Kindes eingeben das Sie anlegen wollen!")

@@ -19,6 +19,8 @@ class Book:
     def save_new_book(self):
         db = DB()
         db.query("INSERT INTO Book (name, pages, autonumbering) VALUES (?, ?, ?)", (self.name, self.pages, self.autonumbering)) == ""
+        for i in range(1, self.pages+1):
+            db.query("INSERT INTO Assignment (bookID, name) VALUES (?, ?)", (self.get_ID(), i))
         db.__del__()
     
     def update(self, namealt:str):
