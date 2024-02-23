@@ -16,13 +16,16 @@ def main():
         Beginnen Sie mit der Navigation auf der linken Seite.
         """
     )
+
     pages = [
         stp.Page("doc.py", "Dokumentation", ":page_with_curl:"),
         stp.Page("buecher.py", "Bücher", ":books:"),
         stp.Page("schueler.py", "Schüler", ":student:"),
         stp.Page("gruppen.py", "Gruppen", ":man-woman-girl-girl:"),
-        stp.Page("benotung.py", "Benotung", ":1234:")
+        stp.Page("benotung.py", "Benotung", ":1234:"),
+        stp.Page("einstellungen.py", "Einstellungen", ":gear:")
     ]
+        
     stp.show_pages(pages)
     
 
