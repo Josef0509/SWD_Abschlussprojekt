@@ -2,7 +2,7 @@
 from db import DB
 
 class Book:
-    def __init__(self, name:str, pages:int, autonumbering:bool):
+    def __init__(self, name:str, pages:int = None, autonumbering:bool = None):
         self.name = name
         self.pages = pages
         self.autonumbering = autonumbering
@@ -19,6 +19,8 @@ class Book:
     def save_new_book(self):
         db = DB()
         db.query("INSERT INTO Book (name, pages, autonumbering) VALUES (?, ?, ?)", (self.name, self.pages, self.autonumbering)) == ""
+        for i in range(1, self.pages+1):
+            db.query("INSERT INTO Assignment (bookID, name) VALUES (?, ?)", (self.get_ID(), i))
         db.__del__()
     
     def update(self, namealt:str):
@@ -31,3 +33,12 @@ class Book:
         #überprüfen ob es noch keine Eintragungen zu diesem Buchnamen gibt
         db.query("DELETE FROM Book WHERE name = ?", (self.name,)) == ""
         db.__del__()
+
+    def get_ID(self):
+        db = DB()
+        ans = db.query("SELECT bookID FROM Book WHERE name = ?", (self.name,))
+        db.__del__()
+        return ans[0][0]
+    
+    def get_name(self):
+        return self.name
