@@ -119,7 +119,7 @@ def uebersicht():
         grades_percentage = []
         for i,grade in enumerate(grades):
             percentage = gradeTOPercentage(grade)
-            if percentage is float or int:
+            if type(percentage) == float or type(percentage) == int:
                 grades_percentage.append(percentage)
                 ap.append(percentage/100*weights[i])
                 pp.append(weights[i])
