@@ -1,12 +1,20 @@
 # SWD_Abschlussprojekt
+
 Abschlussprojekt für Softwaredesign
 
-Installationsanleitung:
-Setting up VENV
-  python -m venv venv
-  .\venv\Scripts\activate
+## Installationsanleitung:
 
-Installing necessary packages:
-  pip install streamlit
-  pip install st_pages
-  pip install matplotlib
+### 1 Setting up VENV
+```bash
+python -m venv venv
+```
+
+### 2 Activating the VENV
+```bash
+.\venv\Scripts\activate
+```
+
+### 3 Install packages
+```bash
+pip install streamlit, st_pages, matplotlib
+```
