@@ -32,7 +32,7 @@ def save_backup(autobackup: bool = False):
         # Copy the file to the destination directory
         shutil.copy(source_file, destination_directory)
 
-        # Keep only the latest 5 backups
+        # Keep only the latest 10 backups
         files_with_creation_times = []
         for file_name in os.listdir(backup_loc):
             file_path = os.path.join(backup_loc, file_name)
