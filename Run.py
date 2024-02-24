@@ -21,7 +21,8 @@ def main():
 
         # Define commands to run in PowerShell
         commands = [
-            f'cd C:/Users/sandr/OneDrive/Desktop/TEST/SWD_Abschlussprojekt/',
+            #es soll cd input_director und dann noch SWD_Abschlussprojekt angehängt werden
+            f'cd {input_directory + "SWD_Abschlussprojekt/"}',
             './venv/Scripts/activate',
             f'streamlit run main.py'
         ]
