@@ -8,7 +8,7 @@ def install():
     # Open PowerShell and navigate to the specified directory
     process = subprocess.Popen(['powershell.exe', '-NoExit'])
 
-    desktop_pfad = os.path.join(os.path.expanduser("~"), "Desktop")
+    desktop_pfad = os.path.join(os.path.expanduser("~"), "Desktop") #hier OneDrive weil mein Laptop kacke ist lol
 
     # Define commands to run in PowerShell
     commands = [
@@ -18,7 +18,7 @@ def install():
     'python -m venv venv',
     './venv/Scripts/activate',
     'pip install streamlit st_pages matplotlib',
-    f'New-Item -ItemType SymbolicLink -Path "{desktop_pfad}/ObSt.lnk" -Target {install_directory+"/SWD_Abschlussprojekt/Run.exe"}',
+    f'New-Item -ItemType SymbolicLink -Path "{desktop_pfad}\ObSt.lnk" -Target {install_directory+"/SWD_Abschlussprojekt/Run.exe"}',
     f'echo {install_directory} > config.txt',  # Create config.txt with input_directory
     ]
 
