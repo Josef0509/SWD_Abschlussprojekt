@@ -7,7 +7,7 @@ def launch():
 
     # Define commands to run in PowerShell
     commands = [
-        './venv/Scripts/activate',
+        './venv/Scripts/activate.bat',
         f'streamlit run main.py'
     ]
 
