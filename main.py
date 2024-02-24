@@ -16,13 +16,16 @@ def main():
         Beginnen Sie mit der Navigation auf der linken Seite.
         """
     )
+
     pages = [
         stp.Page("doc.py", "Dokumentation", ":page_with_curl:"),
         stp.Page("buecher.py", "Bücher", ":books:"),
         stp.Page("schueler.py", "Schüler", ":student:"),
         stp.Page("gruppen.py", "Gruppen", ":man-woman-girl-girl:"),
-        stp.Page("benotung.py", "Benotung", ":1234:")
+        stp.Page("benotung.py", "Benotung", ":1234:"),
+        stp.Page("einstellungen.py", "Einstellungen", ":gear:")
     ]
+        
     stp.show_pages(pages)
     
 
@@ -30,13 +33,14 @@ def login_pressed(name:str, password:str):
     # Load the credentials from the database
     db = DB()
     db_usernames, db_passwords = db.get_credentials()
-    db.__del__()
-
+    
     # Get the hexadecimal representation of the hashed password
     hashed_password = hash(password)
 
     if name in db_usernames and hashed_password == db_passwords[db_usernames.index(name)]:
         st.session_state.logged_in = True
+        db.set_User_in_Session(name)
+        db.__del__()
         logging.info(f"User {name} logged in.")
         
     else:

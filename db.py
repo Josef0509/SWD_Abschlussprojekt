@@ -54,10 +54,26 @@ class DB:
         
     #is used to get the credentials from the database
     def get_credentials(self):
-        credentials = self.query("SELECT * FROM Credentials")
+        credentials = self.query("SELECT * FROM userData")
         usernames = [credential[0] for credential in credentials]
         passwords = [credential[1] for credential in credentials]
         return usernames, passwords
+    
+    def set_User_in_Session(self, username:str):
+        self.query("UPDATE 'Session' SET activeUser = ?", (username,))
+
+    def get_User_in_Session(self):
+        username = self.query("SELECT activeUser FROM 'Session'")
+        username = username[0][0] if username and username[0] else None
+        return username
+    
+    def get_User_backup_location(self, username:str):
+        backup_location = self.query("SELECT storeBackup FROM userData WHERE username = ?", (username,))
+        backup_location = backup_location[0][0] if backup_location and backup_location[0] else None
+        return backup_location
+    
+    def save_User_backup_location(self, username:str, backup_location:str):
+        self.query("UPDATE userData SET storeBackup = ? WHERE username = ?", (backup_location, username))
     
     #loads all group-names from the database
     def load_groups(self):
