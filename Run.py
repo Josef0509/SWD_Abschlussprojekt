@@ -7,7 +7,7 @@ def launch():
 
     # Define commands to run in PowerShell
     commands = [
-        f'cd',
+        f'cd C:/Users/obwal/Desktop/TEST/SWD_Abschlussprojekt/',
         './venv/Scripts/activate.bat',
         f'streamlit run main.py'
     ]
