@@ -16,7 +16,8 @@ def install():
         'python -m venv venv',
         './venv/Scripts/activate',
         'pip install streamlit st_pages matplotlib',
-        f'New-Item -ItemType SymbolicLink -Path "C:/Users/obwal/Desktop/example.lnk" -Target {install_directory+"/SWD_Abschlussprojekt/Run.exe"}'
+        f'New-Item -ItemType SymbolicLink -Path "C:/Users/sandr/OneDrive/Desktop/ObSt.lnk" -Target {install_directory+"/SWD_Abschlussprojekt/Run.exe"}',
+        f'echo {install_directory} > config.txt'  # Create config.txt with input_directory
     ]
 
     # Construct the PowerShell command string
@@ -24,7 +25,6 @@ def install():
 
     # Open PowerShell in interactive mode and run the commands
     process = subprocess.Popen(['powershell.exe', '-NoExit', '-Command', powershell_command])
-
 
 def launch():
     process = subprocess.Popen(['powershell.exe', '-NoExit'])
@@ -32,7 +32,7 @@ def launch():
     # Define commands to run in PowerShell
     commands = [
         './venv/Scripts/activate',
-        f'streamlit run main.py'
+        'streamlit run main.py'
     ]
 
     # Construct the PowerShell command string
@@ -41,7 +41,5 @@ def launch():
     # Open PowerShell in interactive mode and run the commands
     process = subprocess.Popen(['powershell.exe', '-NoExit', '-Command', powershell_command])
 
-
 # Wait for the PowerShell process to finish
 install()
-
