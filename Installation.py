@@ -1,37 +1,46 @@
+import os
 import subprocess
 import sys
-import os
 
-def clone_repository(repo_url, destination):
-    try:
-        subprocess.run(['git', 'clone', repo_url, destination], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
-        return False
-    return True
+def main():
+    config_file = 'config.txt'
 
-repo_url = "https://github.com/Josef0509/SWD_Abschlussprojekt.git"
-destination = input("Enter the destination path: ").strip()  # No need for raw string
+    if not os.path.isfile(config_file):
+        create_config_file(config_file)
 
-if clone_repository(repo_url, destination):
-    print("Repository cloned successfully!")
-else:
-    print("Error cloning repository.")
+    with open(config_file, 'r') as f:
+        path = f.readline().strip()
 
-# Creating a venv there
-#print("Creating a virtual environment...")
-#venv_path = os.path.join(destination, 'venv')
-#subprocess.run([sys.executable, '-m', 'venv', venv_path], check=True)
+    clone_repo(path)
+    setup_venv(path)
+    install_packages(path)
+    run_streamlit(path)
 
-# Activating the virtual environment
-#venv_activate_script = os.path.join(venv_path, 'Scripts', 'activate.bat')
-#activate_cmd = f'call "{venv_activate_script}" && pip install streamlit st_pages matplotlib'
-#subprocess.run(activate_cmd, shell=True)
+def create_config_file(config_file):
+    path = input("Geben Sie den Pfad zum Speichern der Dateien ein: ")
+    with open(config_file, 'w') as f:
+        f.write(path)
 
-# Directly install the packages without venv
-subprocess.run([sys.executable, '-m', 'pip', 'install', 'streamlit', 'st_pages', 'matplotlib'], check=True)
+def clone_repo(path):
+    subprocess.run(['git', 'clone', 'https://github.com/Josef0509/SWD_Abschlussprojekt', path])
+
+def setup_venv(path):
+    venv_path = os.path.join(path, '.venv')
+    subprocess.run(['python', '-m', 'venv', venv_path])
+
+    if sys.platform == 'win32':
+        activate_venv_script = os.path.join(venv_path, 'Scripts', 'activate')
+        subprocess.run([activate_venv_script], shell=True)
+    else:
+        activate_venv_script = os.path.join(venv_path, 'bin', 'activate')
+        subprocess.run(['source', activate_venv_script], shell=True)
 
 
-# Done
-print("Done.")
-input("Press Enter to exit.")
+def install_packages(path):
+    subprocess.run(['pip', 'install', 'streamlit', 'st_pages', 'matplotlib'])
+
+def run_streamlit(path):
+    subprocess.run(['streamlit', 'run', os.path.join(path, 'main.py')])
+
+if __name__ == "__main__":
+    main()
