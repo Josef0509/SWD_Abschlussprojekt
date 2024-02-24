@@ -33,10 +33,14 @@ def check_if_installed():
     # Construct the path to main.py
     main_py_path = os.path.join(current_directory, "main.py")
 
+    print(f"main.py path: {main_py_path}")
+
     # Check if main.py exists
     if os.path.exists(main_py_path):
+        print("The application is already installed.")
         return True
     else:
+        print("The application is not installed.")
         return False
     
 def launch():
