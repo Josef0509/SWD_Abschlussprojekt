@@ -1,24 +1,23 @@
 import subprocess
 import os
 
-def launch_app():
-    try:
-        # get the folder where this script is located
-        destination_folder = os.path.dirname(os.path.realpath(__file__))
 
-        # Specify the Python interpreter within the virtual environment
-        python_executable = os.path.join(destination_folder, 'venv', 'Scripts', 'python.exe')
+def launch():
+    process = subprocess.Popen(['powershell.exe', '-NoExit'])
 
-        # Now that the virtual environment is activated, you can run streamlit
-        main_script = os.path.join(destination_folder, 'main.py')
-        print("Launching the app...")
-        subprocess.run([python_executable, '-m', 'streamlit', 'run', main_script])
+    # Define commands to run in PowerShell
+    commands = [
+        './venv/Scripts/activate',
+        f'streamlit run main.py'
+    ]
 
-        
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
-            
+    # Construct the PowerShell command string
+    powershell_command = ';'.join(commands)
 
-if __name__ == "__main__":
-    launch_app()
-    input("Press Enter to exit...")
+    # Open PowerShell in interactive mode and run the commands
+    process = subprocess.Popen(['powershell.exe', '-NoExit', '-Command', powershell_command])
+
+
+# Wait for the PowerShell process to finish
+launch()
+

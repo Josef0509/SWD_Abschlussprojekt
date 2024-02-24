@@ -16,7 +16,7 @@ def install():
         'python -m venv venv',
         './venv/Scripts/activate',
         'pip install streamlit st_pages matplotlib',
-        f'New-Item -ItemType SymbolicLink -Path "C:/Users/obwal/Desktop/example.lnk" -Target {install_directory+"/SWD_Abschlussprojekt/Installation.exe"}'
+        f'New-Item -ItemType SymbolicLink -Path "C:/Users/obwal/Desktop/example.lnk" -Target {install_directory+"/SWD_Abschlussprojekt/Run.exe"}'
     ]
 
     # Construct the PowerShell command string
@@ -26,23 +26,6 @@ def install():
     process = subprocess.Popen(['powershell.exe', '-NoExit', '-Command', powershell_command])
 
 
-def check_if_installed():
-    # Get the directory of the current Python script
-    current_directory = os.path.dirname(os.path.abspath(__file__))
-
-    # Construct the path to main.py
-    main_py_path = os.path.join(current_directory, "main.py")
-
-    print(f"main.py path: {main_py_path}")
-
-    # Check if main.py exists
-    if os.path.exists(main_py_path):
-        print("The application is already installed.")
-        return True
-    else:
-        print("The application is not installed.")
-        return False
-    
 def launch():
     process = subprocess.Popen(['powershell.exe', '-NoExit'])
 
@@ -60,8 +43,5 @@ def launch():
 
 
 # Wait for the PowerShell process to finish
-if check_if_installed():
-    launch()
-else:
-    install()
+install()
 
