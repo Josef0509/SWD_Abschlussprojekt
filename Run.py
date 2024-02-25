@@ -9,6 +9,9 @@ def launch():
     input_directory = "C:/Users/sandr/Desktop/TEST/SWD_Abschlussprojekt"
 
     print(f"Working directory: {input_directory}")
+
+    current_working_directory = os.getcwd()
+    print(f"Current Working Directory: {current_working_directory}")
     
 
     if input_directory:
