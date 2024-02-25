@@ -11,7 +11,7 @@ def get_input_directory():
         print("config.txt not found. Please run Installation.py first.")
         return None
 
-def main():
+def launch():
     # Setze das Arbeitsverzeichnis auf das Verzeichnis des ursprünglichen Skripts
     print("Pfad zum Projektordner wird geladen...")
     input_directory = os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -49,5 +49,4 @@ def main():
         # Warten, bis der PowerShell-Prozess beendet ist
         process.wait()
 
-if __name__ == "__main__":
-    main()
+launch()
