@@ -30,7 +30,7 @@ def install():
     # Open PowerShell in interactive mode and run the commands
     process = subprocess.Popen(['powershell.exe', '-NoExit', '-Command', powershell_command])
 
-    launch()
+    #launch()
 
 def launch():
     process = subprocess.Popen(['powershell.exe', '-NoExit'])
