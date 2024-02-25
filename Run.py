@@ -1,5 +1,6 @@
 import subprocess
 import os
+import sys
 
 
 
@@ -9,6 +10,20 @@ def launch():
     input_directory = "C:/Users/sandr/Desktop/TEST/SWD_Abschlussprojekt"
 
     print(f"Working directory: {input_directory}")
+
+    
+
+
+    if getattr(sys, 'frozen', False):
+        # Das Skript wird als eigenständige ausführbare Datei ausgeführt (z. B. durch PyInstaller)
+        exe_path = sys.executable
+        original_working_directory = os.path.dirname(exe_path)
+        print(f"Original Working Directory: {original_working_directory}")
+        
+    else:
+        # Das Skript wird direkt interpretiert
+        direct_intrepretation = os.getcwd()
+        print(f"Direct Interpretation: {direct_intrepretation}")
 
     current_working_directory = os.getcwd()
     print(f"Current Working Directory: {current_working_directory}")
