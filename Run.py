@@ -7,13 +7,17 @@ import sys
 def launch():
     #hole den Pfad zum Projektordner des symlinks
     print("Pfad zum Projektordner wird geladen...")
-    input_directory = "C:/Users/sandr/Desktop/TEST/SWD_Abschlussprojekt"
 
-    print(f"Working directory: {input_directory}")
+    #Hardcoded Pfad zum Projektordner
+    #input_directory = "C:/Users/sandr/Desktop/TEST/SWD_Abschlussprojekt"
+    #print(f"Working directory: {input_directory}")
 
+    #symlink Verzeichnis
+    current_working_directory = os.getcwd()
+    print(f"Current Working Directory: {current_working_directory}")
     
-
-
+    
+    #get the original working directory of the executable
     if getattr(sys, 'frozen', False):
         # Das Skript wird als eigenständige ausführbare Datei ausgeführt (z. B. durch PyInstaller)
         exe_path = sys.executable
@@ -25,15 +29,13 @@ def launch():
         direct_intrepretation = os.getcwd()
         print(f"Direct Interpretation: {direct_intrepretation}")
 
-    current_working_directory = os.getcwd()
-    print(f"Current Working Directory: {current_working_directory}")
     
 
-    if input_directory:
+    if original_working_directory:
         
         # PowerShell-Befehle vorbereiten
         powershell_commands = [
-            f'cd {input_directory}',
+            f'cd {original_working_directory}',
             '.\\venv\\Scripts\\activate',
             'streamlit run main.py'
         ]
