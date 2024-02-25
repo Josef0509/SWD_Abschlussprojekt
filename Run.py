@@ -22,6 +22,9 @@ def main():
             print(f"Project directory '{project_directory}' not found.")
             return
 
+        # Setze das Arbeitsverzeichnis auf das Verzeichnis des ursprünglichen Skripts
+        os.chdir(os.path.dirname(os.path.realpath(__file__)))
+
         # PowerShell-Befehle vorbereiten
         powershell_commands = [
             f'cd "{project_directory}"',
