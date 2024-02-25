@@ -6,7 +6,17 @@ import os
 def launch():
     #hole den Pfad zum Projektordner des symlinks
     print("Pfad zum Projektordner wird geladen...")
-    input_directory = os.path.dirname(os.path.realpath(__file__))
+#aus config.txt Pfad nehmen
+    try:
+        with open("config.txt", "r") as file:
+            input_directory = file.readline().strip()
+            #füge SWD_Abschlussprojekt an den Pfad an
+            input_directory = os.path.join(input_directory, "SWD_Abschlussprojekt")
+            print(f"Input directory: {input_directory}")
+    except FileNotFoundError:
+        print("config.txt not found. Please run Installation.py first.")
+        return None
+
     print(f"Working directory: {input_directory}")
     
 
