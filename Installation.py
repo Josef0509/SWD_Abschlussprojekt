@@ -1,6 +1,8 @@
 import subprocess
 import os
 
+
+
 def install():
     # Ask the user for the directory where to install
     install_directory = input("Enter the directory where you want to install: ")
@@ -45,3 +47,5 @@ def launch():
 
 # Wait for the PowerShell process to finish
 install()
+
+launch()
