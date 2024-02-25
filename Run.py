@@ -14,23 +14,28 @@ def main():
     input_directory = get_input_directory()
 
     if input_directory:
-        # Open PowerShell in interactive mode and run the commands
-        process = subprocess.Popen(['powershell.exe', '-NoExit'])
+        # Konstruiere den vollen Pfad zum Unterordner
+        project_directory = os.path.join(input_directory, "SWD_Abschlussprojekt")
 
-        # Define commands to run in PowerShell
-        commands = [
-            f'cd {input_directory + "SWD_Abschlussprojekt/"}',
-            './venv/Scripts/activate',
-            f'streamlit run main.py'
+        # Überprüfe, ob der Projektordner existiert
+        if not os.path.exists(project_directory):
+            print(f"Project directory '{project_directory}' not found.")
+            return
+
+        # PowerShell-Befehle vorbereiten
+        powershell_commands = [
+            f'cd "{project_directory}"',
+            '.\\venv\\Scripts\\Activate',
+            'streamlit run main.py'
         ]
 
-        # Construct the PowerShell command string
-        powershell_command = ';'.join(commands)
+        # PowerShell-Befehle in einer Zeichenkette verbinden
+        powershell_command = ';'.join(powershell_commands)
 
-        # Run the commands in PowerShell
+        # PowerShell-Prozess starten
         process = subprocess.Popen(['powershell.exe', '-NoExit', '-Command', powershell_command])
 
-        # Wait for the PowerShell process to finish
+        # Warten, bis der PowerShell-Prozess beendet ist
         process.wait()
 
 if __name__ == "__main__":
