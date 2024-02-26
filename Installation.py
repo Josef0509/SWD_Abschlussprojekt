@@ -25,6 +25,15 @@ def install():
     'pip install streamlit st_pages matplotlib',
     f'New-Item -ItemType SymbolicLink -Path "{desktop_pfad}\ObSt.lnk" -Target {install_directory+"/SWD_Abschlussprojekt/Run.exe"}',
     f'echo {install_directory} > config.txt',  # Create config.txt with input_directory
+    #schreibe auch die gemachten Schritte in die config.txt
+    'echo "1. Set-ExecutionPolicy RemoteSigned" >> config.txt',
+    'echo "2. Installiere Python" >> config.txt',
+    'echo "3. Installiere Git" >> config.txt',
+    'echo "4. Clone das Repository" >> config.txt',
+    'echo "5. Erstelle das virtuelle Environment" >> config.txt',
+    'echo "6. Aktiviere das virtuelle Environment" >> config.txt',
+    'echo "7. Installiere die benötigten Pakete" >> config.txt',
+    'echo "8. Erstelle einen Symlink auf dem Desktop" >> config.txt',
     ]
 
     # Construct the PowerShell command string
