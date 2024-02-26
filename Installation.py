@@ -14,6 +14,9 @@ def install():
 
     # Define commands to run in PowerShell
     commands = [
+    'Set-ExecutionPolicy RemoteSigned',#setze Execution Policy auf RemoteSigned zur Ausführung von Skripten
+    'cmd /c "curl -o python-installer.exe https://www.python.org/ftp/python/3.9.0/python-3.9.0.exe && python-installer.exe"', #installiere Python
+    'winget install --id Git.Git -e --source winget', #installiere Git
     f'cd {install_directory}',
     'git clone https://github.com/Josef0509/SWD_Abschlussprojekt.git',
     'cd ./SWD_Abschlussprojekt',
@@ -49,3 +52,10 @@ def launch():
 
 # Wait for the PowerShell process to finish
 install()
+
+
+
+
+#Need Python
+#Need GitBash
+#Need Execution Policy to be set to RemoteSigned
