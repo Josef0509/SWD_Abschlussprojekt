@@ -1,9 +1,10 @@
 # SWD_Abschlussprojekt
 
-Abschlussprojekt für Softwaredesign
+Abschlussprojekt für Softwaredesign von Sandro Streicher und Josef Obwaller [ObSt]
+
 
 ## Installationsanleitung:
-
+Sie können entweder:
 ### 1 Setting up VENV
 ```bash
 python -m venv venv
@@ -18,3 +19,5 @@ python -m venv venv
 ```bash
 pip install streamlit, st_pages, matplotlib
 ```
+oder sich nur die Installation.exe downloaden.
+Wenn Sie diese als Admin ausführen und angeben wohin Sie das Programm installieren möchten, wird dorthin das Repository geklont. Anschließend wird dort ein venv erstellt und alle nötigen Packages installiert. Zuletzt wird eine Verknüpfung auf dem Desktop erstellt die Sie doppelklicken können um das Programm zu starten.
