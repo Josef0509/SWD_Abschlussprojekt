@@ -183,63 +183,6 @@ def uebersicht():
             selected_book_name = selected_book.get_name()
             st.caption(f"Hier sehen Sie die Noten der Kinder in der {group} für das Fach: {selected_book_name}.")
 
-            children = kids_in_group
-            possible_points = []
-            achieved_points = []
-
-            for kid in children:
-                first_name = kid.split(" ")[0]
-                last_name = kid.split(" ")[1]
-                kid_obj = Kid(first_name, last_name)
-
-                weights = kid_obj.get_weights_with_bookID(selected_book_ID)
-
-
-                grades = kid_obj.get_grades_with_bookID(selected_book_ID)
-
-                ap = []
-                pp = []
-                for i, grade in enumerate(grades):
-                    try: 
-                        percentage = gradeTOPercentage(grade)
-                        if isinstance(percentage, (float, int)): # Handle the case where percentage is not a valid number
-                            ap.append(percentage / 100 * weights[i])
-                            pp.append(weights[i])
-                    except Exception as e:
-                        logging.exception('Fehler beim Berechnen der erreichten und möglichen Punkte!')
-                        st.write("Fehler beim Berechnen der erreichten und möglichen Punkte!")
-
-                possible_points.append(sum(pp))
-                achieved_points.append(sum(ap))
-
-            #print(possible_points)
-            #print(achieved_points)
-            try:
-                #calculate the lost points
-                lost_points = [possible_points[i] - achieved_points[i] for i in range(len(possible_points))]
-            except Exception as e:
-                logging.exception('Fehler beim Berechnen der verlorenen Punkte!')
-                st.write("Fehler beim Berechnen der verlorenen Punkte!")
-            
-            # der bar chart wird nur erstellt, wenn es Noten gibt
-            #look if there are points
-            sum_achieved_points = sum(achieved_points)
-            if sum_achieved_points > 0:
-                try:
-                    #create a bar chart for the achieved and lost points
-                    data = {
-                        'Children': children,
-                        'Possible Points': possible_points,
-                        'erreichte Punkte': achieved_points,
-                        'nicht erreichte Punkte': lost_points
-                    }
-                    st.bar_chart(data, use_container_width=True, x = 'Children', y= ['erreichte Punkte', 'nicht erreichte Punkte'], color = ["#39b035","#d44d44"])
-                except Exception as e:
-                    logging.exception('Fehler beim Erstellen des Balkendiagramms!')
-                    st.write("Fehler beim Esrstellen des Balkendiagramms!")
-            else:
-                st.error("Bar Chart wird erstellt, sobald Noten vorhanden sind.")
-
             
             
             #get file path from user

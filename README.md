@@ -2,7 +2,7 @@
 
 Abschlussprojekt für Softwaredesign
 
-## Installationsanleitung:
+## Installationsanleitung :
 
 ### 1 Setting up VENV
 ```bash
@@ -18,3 +18,6 @@ python -m venv venv
 ```bash
 pip install streamlit, st_pages, matplotlib
 ```
+
+## Installationsanleitung für Lehrer:
+

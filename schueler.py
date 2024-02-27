@@ -113,6 +113,29 @@ def uebersicht():
         grades = selected_kid.get_grades_with_bookID(book.get_ID())
         weights = selected_kid.get_weights_with_bookID(book.get_ID())
 
+
+        st.header(F"{book.get_name()}: {grades}")
+        st.header(F"{book.get_name()}: {weights}")
+
+        # Calculate the mean weighted grade
+
+        total_score = 0
+        total_weight = 0
+
+        for grade, weight in zip(grades, weights):
+            if grade != 'K':
+                total_score += int(grade) * weight
+                total_weight += weight
+
+        if total_weight == 0:
+            result = 0  # Falls keine gültigen Noten vorhanden sind, um Division durch Null zu vermeiden
+        else:
+            result = total_score / total_weight
+
+        st.header(F"{book.get_name()}: {result}")
+
+
+        
         ap = []
         pp = []
 
