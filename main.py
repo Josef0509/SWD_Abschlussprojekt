@@ -49,6 +49,7 @@ def login_pressed(name:str, password:str):
 def login():
     st.title("Login Page")
     # Insert a form
+    #ABGABE: Username und  PW für Julian und Matthias anzeigen
     name = st.text_input("Name")
     password = st.text_input("Password", type="password")
     st.button("Login", on_click=lambda: login_pressed(name, password))
