@@ -10,6 +10,14 @@ from c_schueler import Kid
 st.set_page_config(layout="wide", page_title="Gruppen", page_icon=":man-woman-girl-girl:")
 st.title(":man-woman-girl-girl:"+" Gruppen")
 
+st.markdown("""
+            Hier können Sie Gruppen/Stufen anlegen und bearbeiten. 
+            Im Reiter 'Teilnehmer' können Sie die Kinder den entsprechenden Gruppen zuweisen. 
+            Sie können ein Kind nur dann zu einer Gruppe hinzufügen, wenn es noch in keiner Gruppe ist.
+            Um die Änderungen zu übernehmen drücken Sie bitte auf 'Speichern'.
+            """)
+
+
 # Initialize session state
 if "showSession" not in st.session_state:
     st.session_state.showSession = 1

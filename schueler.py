@@ -16,6 +16,11 @@ import matplotlib.pyplot as plt
 st.set_page_config(layout="wide", page_title="Schüler:innen", page_icon=":student:")
 st.title(":student:"+" Schüler:innen")
 
+st.markdown("""
+            Hier können Sie Schüler*innen hinzufügen und bearbeiten. Zudem sehen Sie den Notenverlauf und die exakte Note des Kindes.
+            Im unteren Bereich können Sie sich Notizen zu dem Kind machen. Bitte drücken Sie auf 'Notizen speichern' wenn sie die Notizen fertiggestellt haben.
+            """)
+
 # Initialize session state
 if "showSession" not in st.session_state:
     st.session_state.showSession = 1

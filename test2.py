@@ -8,4 +8,3 @@ for i in range(0, 101, 1):
     print(f"Percentage: {i} -> Grade: {percentageTOGrade(i)}")
 
 
-print(percentageTOGrade(0.928))

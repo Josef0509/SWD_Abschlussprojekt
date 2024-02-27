@@ -6,6 +6,14 @@ from c_buecher import Book
 st.set_page_config(layout="wide", page_title="Bücher", page_icon=":books:")
 st.title(":books:"+" Bücher")
 
+st.markdown(
+            """
+            Hier könne Sie Bücher anlegen und bestehende bearbeiten. 
+            Sie können Bücher auch mit der Seitenanzahl 0 anlegen, wenn Sie später Aufgaben hinzufügen wollen.
+            Bitte beachten Sie, dass sie die Seitenanzahl stehts erhöhen können, aber nicht verringern!
+            """
+            )
+
 #Initialize session state
 if "buchanlegen" not in st.session_state:
     st.session_state.buchanlegen = True
@@ -25,7 +33,7 @@ def button_anlegen_clicked():
     
     new_book = Book(name, seitenanzahl, autonumbering)
 
-    if name == "" or seitenanzahl <= 0:
+    if name == "":
         st.error("Bitte füllen Sie alle Felder aus!")
     elif new_book.check_if_book_name_exists():
         st.error("Dieses Buch existiert bereits! Sie können es bearbeiten!")
@@ -46,9 +54,9 @@ def button_speichern_clicked():
     autonumbering_neu = st.session_state.key_autonumerierung_neu
     update_book = Book(name, seitenanzahl, autonumbering_neu)
 
-    if namealt == None or name == "" or seitenanzahl <= 0:
+    if namealt == None or name == "":
         st.error("Bitte füllen Sie alle Felder aus!")
-    elif update_book.check_if_book_name_exists():
+    elif update_book.check_if_book_name_exists() and namealt != name:
         st.error("Es gibt bereits ein Buch mit diesem Namen!")
     else:
         with st.spinner("Buch wird gespeichert..."):

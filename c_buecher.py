@@ -26,6 +26,10 @@ class Book:
     def update(self, namealt:str):
         db = DB()     
         db.query("UPDATE Book SET name = ?, pages = ?, autonumbering = ? WHERE name = ?", (self.name, self.pages, self.autonumbering, namealt)) == ""
+        for i in range(1, self.pages+1):
+            ispage = db.query("SELECT * FROM Assignment WHERE bookID = ? AND name = ?", (self.get_ID(), i))
+            if ispage == []:
+                db.query("INSERT INTO Assignment (bookID, name) VALUES (?, ?)", (self.get_ID(), i))
         db.__del__()
 
     def delete(self):

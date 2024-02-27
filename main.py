@@ -7,15 +7,31 @@ import logging
 
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
-st.set_page_config(layout="centered", page_title="Notensoftware")
+st.set_page_config(layout="wide", page_title="Notensoftware", page_icon=":school:")
 
 def main():
-    st.title("Notensoftware")
-    st.markdown(
-        """
+    st.markdown("""
+        # Willkommen zu VSGrade :school: 
+
+        ---
+                
         Beginnen Sie mit der Navigation auf der linken Seite.
-        """
+                
+        ---
+    	"""
     )
+
+    st.header("Dokumentation")
+    st.markdown("""
+                Dort können Sie jederzeit die Dokumentation zu diesem Programm einsehen.
+                #
+                #
+                #
+                #
+                """
+                )
+    st.markdown("powered by ObSt")
+    
 
     pages = [
         stp.Page("doc.py", "Dokumentation", ":page_with_curl:"),

@@ -15,17 +15,30 @@ from c_buecher import Book
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
 logging.info('Benotung ausgewaehlt')
 
-
 # Configuration of the page
 st.set_page_config(layout="wide", page_title="Benotung", page_icon=":1234:")
 
 # Add title to the page
 st.title(":1234:"+" Benotung")
 
-
 # Initialize session state
 if "showSession" not in st.session_state:
     st.session_state.showSession = 1
+
+if st.session_state.showSession == 1:
+    st.markdown("""
+                In der Übersicht sehen sie für ein ausgewähltes Buch/Fach die eingetragenen Noten für die Kinder jeder Gruppe.
+                Um zu Benoten, klicken Sie auf Detailansicht. 
+                """)
+else:
+    st.markdown("""
+                Hier müssen Sie zuerst das Buch, die Gruppe und das Kind auswählen.
+                Sie können bei der Seitenauswahl entweder die Seitenanzahl hineinschreiben oder einen eigenen Titel.
+                Drücken Sie nachdem Sie die Seite modifiziert haben die Entertaste. Ist die Aufgabe noch nicht im System eingetragen, so erscheint ein 'Aufgabe hinzufügen' Button den Sie bitte drücken.
+                Danach können Sie die Aufgabenbeschreibung und die Benotung durchführen.
+                Drücken Sie zuletzt auf 'Speichern'.
+                """)
+
 
 
 # Add columns for buttons
@@ -246,6 +259,7 @@ def uebersicht():
 
 #++++++++++++++++++++++++++++++++++DETAILANSICHT+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def detailansicht():
+
     #database object
     try:
         db = DB()
