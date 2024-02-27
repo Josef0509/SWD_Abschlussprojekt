@@ -180,8 +180,8 @@ def uebersicht():
             except Exception as e:
                 logging.exception('Fehler beim Anzeigen des DataFrames!')
                 st.write("Fehler beim Anzeigen des DataFrames!")
-            
-            st.caption(f"Hier sehen Sie die Noten der Kinder in der {group} für das Fach {selected_book}.")
+            selected_book_name = selected_book.get_name()
+            st.caption(f"Hier sehen Sie die Noten der Kinder in der {group} für das Fach: {selected_book_name}.")
 
             children = kids_in_group
             possible_points = []
