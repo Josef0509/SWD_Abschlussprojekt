@@ -11,6 +11,12 @@ from c_benotung import gradeTOPercentage, percentageTOGrade
 from c_schueler import Kid
 from c_buecher import Book
 import os
+import pdfkit
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
 
 #configure logfile
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
@@ -94,8 +100,11 @@ def uebersicht():
         logging.exception('Fehler bei der Übergabe der Seitenanzahl des Buches!')
         st.text("Fehler bei der Übergabe der Seitenanzahl des Buches!")
 
-  
+    df_all = pd.DataFrame()
+
+
     if assignmentIDs:
+
        
         #load all groups from the database
         try:
@@ -183,11 +192,20 @@ def uebersicht():
             selected_book_name = selected_book.get_name()
             st.caption(f"Hier sehen Sie die Noten der Kinder in der {group} für das Fach: {selected_book_name}.")
 
-            
+            #hänge df_group an df_all an
+            #before appending df_group to df_all make one row for the group name
+            #row not column
+
+            df_group_for_all = df_group.copy()
+
+            df_group_for_all.insert(0, "Group", group)
+
+            df_all = pd.concat([df_all, df_group_for_all], ignore_index=True)
             
             #get file path from user
             file_path = os.path.join(os.path.expanduser("~"), "Desktop")
             
+
 
             try:
                 #create a button to export the dataframe to a csv file
@@ -212,6 +230,78 @@ def uebersicht():
         
         #visual appearance
         st.caption("Die Spalten entsprechen den Seiten des Buches und die Zeilen den Kindern. Die Noten sind in den Zellen eingetragen. Wenn eine Zelle leer ist, hwurde die Seite noch nicht bewertet.")
+
+        st.data_editor(
+            df_all,
+            hide_index=True,
+            disabled=df_all.columns,
+        )
+
+        #dataframe als pdf exportieren
+        
+
+        #export dataframe to csv
+        try:
+            if st.button("Export all to CSV", help="Klicken Sie hier um die Daten als CSV zu exportieren!"):
+
+
+                selected_book = selected_book.get_name()
+                time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+                df_all.to_csv(os.path.join(file_path, f"{selected_book}_{time}grades.csv"), index=False)
+                st.success(f"Data successfully exported to {file_path}")
+
+                #seite neu laden
+                st.experimental_rerun()
+        except Exception as e:
+            logging.exception('Fehler beim Exportieren als CSV!')
+            st.write("Fehler beim Exportieren als CSV!")
+
+        
+       
+
+        
+        
+
+        try:
+            if st.button("Export all to PDF", help="Klicken Sie hier um die Daten als PDF zu exportieren!"):
+                
+                # Specify the file path for the PDF export
+                selected_book = selected_book.get_name()
+                time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                output_pdf_path = os.path.join(file_path, f"{selected_book}_{time}grades.pdf")
+                pdf = SimpleDocTemplate(output_pdf_path, pagesize=letter)
+
+                # Convert the DataFrame to a list of lists for the Table
+                data = [df_all.columns.tolist()] + df_all.values.tolist()
+                table = Table(data)
+
+                # Define the style of the table
+                #each row has lines
+                table_style = TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    # ... (your other styles)
+                ])
+
+                table.setStyle(table_style)
+
+                # Include the table in the PDF
+                elements = [table]
+
+                # Include HTML content in the PDF
+                #html_content = "<h1>Hello, this is HTML content</h1>"
+                #html_flowable = Paragraph(html_content, getSampleStyleSheet()['Heading1'])
+                #elements.append(html_flowable)
+
+                pdf.build(elements)
+                st.success(f"Data successfully exported to {output_pdf_path}")
+        except Exception as e:
+            st.exception('Fehler beim Exportieren als PDF!')
+            st.write("Fehler beim Exportieren als PDF!")
+
+
+
 
             
     else:
