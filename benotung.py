@@ -10,6 +10,13 @@ import logging
 from c_benotung import gradeTOPercentage, percentageTOGrade
 from c_schueler import Kid
 from c_buecher import Book
+import os
+import pdfkit
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
 
 #configure logfile
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
@@ -79,6 +86,7 @@ db.__del__()
 
 #++++++++++++++++++++++++++++++++++ÜBERSICHT+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def uebersicht():
+    logging.info('Übersicht ausgewählt')
 
     # Create a database object
     try:
@@ -105,8 +113,11 @@ def uebersicht():
         logging.exception('Fehler bei der Übergabe der Seitenanzahl des Buches!')
         st.text("Fehler bei der Übergabe der Seitenanzahl des Buches!")
 
-  
+    df_all = pd.DataFrame()
+
+
     if assignmentIDs:
+
        
         #load all groups from the database
         try:
@@ -159,14 +170,20 @@ def uebersicht():
                         logging.exception('Fehler beim Laden der Noten!')
                         st.write("Fehler beim Laden der Noten!")
 
-                    #if grade is present, append it to the list, else append an empty string
-                    if grade:
-                        page_grades.append(grade[0][0])
-                    else:
-                        page_grades.append("")
+                    try:
+                        #if grade is present, append it to the list, else append an empty string
+                        if grade:
+                            page_grades.append(grade[0][0])
+                        else:
+                            page_grades.append("")
+                    except Exception as e:
+                        st.write("Fehler beim hinzuügen der Noten an den list!")
                 
                 #add the list of grades to the dataframe
-                df_group[assignmentName] = page_grades
+                try:
+                    df_group[assignmentName] = page_grades
+                except Exception as e:
+                    st.write("Fehler beim hinzufügen der Noten an das DataFrame!")
             
             #insert the kid names as the first column
             df_group.insert(0, 'Kid Name', kids_in_group)  # Insert Kid Names as the first column
@@ -175,67 +192,47 @@ def uebersicht():
             #visual appearance
             st.subheader(group)
 
-            #display the dataframe
-            st.data_editor(
+            try:
+                #display the dataframe
+                st.data_editor(
                     df_group,
                     hide_index=True,
                     disabled=df_group.columns,
                 )
-            st.caption(f"Hier sehen Sie die Noten der Kinder in der {group} für das Fach {selected_book}.")
+            except Exception as e:
+                logging.exception('Fehler beim Anzeigen des DataFrames!')
+                st.write("Fehler beim Anzeigen des DataFrames!")
+            selected_book_name = selected_book.get_name()
+            st.caption(f"Hier sehen Sie die Noten der Kinder in der {group} für das Fach: {selected_book_name}.")
 
-            children = kids_in_group
-            possible_points = []
-            achieved_points = []
+            #hänge df_group an df_all an
+            #before appending df_group to df_all make one row for the group name
+            #row not column
 
-            for kid in children:
-                first_name = kid.split(" ")[0]
-                last_name = kid.split(" ")[1]
-                kid_obj = Kid(first_name, last_name)
+            df_group_for_all = df_group.copy()
 
-                weights = kid_obj.get_weights_with_bookID(selected_book_ID)
+            df_group_for_all.insert(0, "Group", group)
 
-
-                grades = kid_obj.get_grades_with_bookID(selected_book_ID)
-
-                ap = []
-                pp = []
-                for i, grade in enumerate(grades):
-                    percentage = gradeTOPercentage(grade)
-                    if isinstance(percentage, (float, int)):
-                        ap.append(percentage / 100 * weights[i])
-                        pp.append(weights[i])
-                    else:
-                        # Handle the case where percentage is not a valid number
-                        pass
-
-                possible_points.append(sum(pp))
-                achieved_points.append(sum(ap))
-
-            #print(possible_points)
-            #print(achieved_points)
-                
-            lost_points = [possible_points[i] - achieved_points[i] for i in range(len(possible_points))]
+            df_all = pd.concat([df_all, df_group_for_all], ignore_index=True)
             
-            data = {
-                'Children': children,
-                'Possible Points': possible_points,
-                'erreichte Punkte': achieved_points,
-                'nicht erreichte Punkte': lost_points
-            }
+            #get file path from user
+            file_path = os.path.join(os.path.expanduser("~"), "Desktop")
+            
 
-            st.bar_chart(data, use_container_width=True, x = 'Children', y= ['erreichte Punkte', 'nicht erreichte Punkte'], color = ["#39b035","#d44d44"])
-
-            #export the dataframe to a csv file
-
-            #create file path for each group
-            file_path = f"C:\\Users\\sandr\\OneDrive\\Desktop\\test\\{group}_export.csv"
 
             try:
-
                 #create a button to export the dataframe to a csv file
                 if st.button(f"Export {group} to CSV", help="Klicken Sie hier um die Daten als CSV zu exportieren!"):
-                    df_group.to_csv(file_path, sep='\t')
+                    
+
+                    selected_book = selected_book.get_name()
+                    time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+                    df_group.to_csv(os.path.join(file_path, f"{group}_{selected_book}_{time}grades.csv"), index=False)
                     st.success(f"Data successfully exported to {file_path}")
+
+                    #seite neu laden
+                    st.experimental_rerun()
 
             except Exception as e:
                 logging.exception('Fehler beim Exportieren als CSV!')
@@ -246,6 +243,78 @@ def uebersicht():
         
         #visual appearance
         st.caption("Die Spalten entsprechen den Seiten des Buches und die Zeilen den Kindern. Die Noten sind in den Zellen eingetragen. Wenn eine Zelle leer ist, hwurde die Seite noch nicht bewertet.")
+
+        st.data_editor(
+            df_all,
+            hide_index=True,
+            disabled=df_all.columns,
+        )
+
+        #dataframe als pdf exportieren
+        
+
+        #export dataframe to csv
+        try:
+            if st.button("Export all to CSV", help="Klicken Sie hier um die Daten als CSV zu exportieren!"):
+
+
+                selected_book = selected_book.get_name()
+                time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+                df_all.to_csv(os.path.join(file_path, f"{selected_book}_{time}grades.csv"), index=False)
+                st.success(f"Data successfully exported to {file_path}")
+
+                #seite neu laden
+                st.experimental_rerun()
+        except Exception as e:
+            logging.exception('Fehler beim Exportieren als CSV!')
+            st.write("Fehler beim Exportieren als CSV!")
+
+        
+       
+
+        
+        
+
+        try:
+            if st.button("Export all to PDF", help="Klicken Sie hier um die Daten als PDF zu exportieren!"):
+                
+                # Specify the file path for the PDF export
+                selected_book = selected_book.get_name()
+                time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                output_pdf_path = os.path.join(file_path, f"{selected_book}_{time}grades.pdf")
+                pdf = SimpleDocTemplate(output_pdf_path, pagesize=letter)
+
+                # Convert the DataFrame to a list of lists for the Table
+                data = [df_all.columns.tolist()] + df_all.values.tolist()
+                table = Table(data)
+
+                # Define the style of the table
+                #each row has lines
+                table_style = TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    # ... (your other styles)
+                ])
+
+                table.setStyle(table_style)
+
+                # Include the table in the PDF
+                elements = [table]
+
+                # Include HTML content in the PDF
+                #html_content = "<h1>Hello, this is HTML content</h1>"
+                #html_flowable = Paragraph(html_content, getSampleStyleSheet()['Heading1'])
+                #elements.append(html_flowable)
+
+                pdf.build(elements)
+                st.success(f"Data successfully exported to {output_pdf_path}")
+        except Exception as e:
+            st.exception('Fehler beim Exportieren als PDF!')
+            st.write("Fehler beim Exportieren als PDF!")
+
+
+
 
             
     else:
@@ -338,15 +407,19 @@ def detailansicht():
             st.write("Fehler bei der Übergabe der Seitenanzahl des Buches!")
         
 
-        #select first ungraded page
-        last_graded_page = db.query("SELECT MAX(assignmentID) FROM Grade WHERE kidID = ? AND bookID = ?", (kid_id, book_id))
-        last_graded_page = last_graded_page[0][0] 
-        if last_graded_page == None:
-            last_graded_page = 1
+        try:
+            #select first ungraded page
+            last_graded_page = db.query("SELECT MAX(assignmentID) FROM Grade WHERE kidID = ? AND bookID = ?", (kid_id, book_id))
+            last_graded_page = last_graded_page[0][0] 
+            if last_graded_page == None:
+                last_graded_page = 1
 
-        #größer als seitananzahl
-        if last_graded_page + 1 > seitenanz_aus_DB:
-            last_graded_page = seitenanz_aus_DB-1
+            #größer als seitananzahl
+            if last_graded_page + 1 > seitenanz_aus_DB:
+                last_graded_page = seitenanz_aus_DB-1
+        except Exception as e:
+            logging.exception('Fehler beim Laden der letzten bewerteten Seite!')
+            st.write("Fehler beim Laden der letzten bewerteten Seite!")
 
         #page selection, +1 for next page to grade
         selected_assignment_name = container.text_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page+1, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!")
@@ -355,36 +428,43 @@ def detailansicht():
 
 
 
+        try:
+            #get all assignment names of the selected book
+            assignment_names = db.query("SELECT name FROM Assignment WHERE bookID = ?", (book_id,))
+            assignment_names = [assignment[0] for assignment in assignment_names] if assignment_names else []
 
-        #get all assignment names of the selected book
-        assignment_names = db.query("SELECT name FROM Assignment WHERE bookID = ?", (book_id,))
-        assignment_names = [assignment[0] for assignment in assignment_names] if assignment_names else []
-
-        if selected_assignment_name not in assignment_names:
-            st.write("Die Seite existiert nicht.")
-            st.button("Aufgabe hinzufügen", help="Klicken Sie hier um eine neue Aufgabe hinzuzufügen!", key="key_add_assignment")
-            if st.session_state.key_add_assignment:
-                db.query("INSERT INTO Assignment (bookID, name) VALUES (?, ?)", (book_id, selected_assignment_name))
-                st.experimental_rerun()
+            if selected_assignment_name not in assignment_names:
+                st.write("Die Seite existiert nicht.")
+                st.button("Aufgabe hinzufügen", help="Klicken Sie hier um eine neue Aufgabe hinzuzufügen!", key="key_add_assignment")
+                if st.session_state.key_add_assignment:
+                    db.query("INSERT INTO Assignment (bookID, name) VALUES (?, ?)", (book_id, selected_assignment_name))
+                    st.experimental_rerun()
+            
+            assignment_ID = db.query("SELECT assignmentID FROM Assignment WHERE bookID = ? AND name = ?", (book_id, selected_assignment_name))
+            assignment_ID = assignment_ID[0][0] if assignment_ID and assignment_ID[0] else None
+                    
+        except Exception as e:
+            logging.exception('Fehler beim Laden der Aufgaben!')
+            st.write("Fehler beim Laden der Aufgaben!")
             
 
 
 
-        assignment_ID = db.query("SELECT assignmentID FROM Assignment WHERE bookID = ? AND name = ?", (book_id, selected_assignment_name))
-        assignment_ID = assignment_ID[0][0] if assignment_ID and assignment_ID[0] else None
+        try:
+            #get the grade, comment, weight and date of the selected page
 
+            assignment_description = db.query("SELECT description FROM Assignment WHERE assignmentID = ?", (assignment_ID,))
 
-        #get the grade, comment, weight and date of the selected page
-
-        assignment_description = db.query("SELECT description FROM Assignment WHERE assignmentID = ?", (assignment_ID,))
-
-        grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id,assignment_ID))
-        
-        comment_result = db.query("SELECT comment FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
-        
-        weight_result = db.query("SELECT weight FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
-        
-        date_result = db.query("SELECT date FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
+            grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id,assignment_ID))
+            
+            comment_result = db.query("SELECT comment FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
+            
+            weight_result = db.query("SELECT weight FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
+            
+            date_result = db.query("SELECT date FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
+        except Exception as e:
+            logging.exception('Fehler beim Laden der Noten, Kommentare usw.!')
+            st.write("Fehler beim Laden der Noten, Kommentare usw.!")
         
 
         #visual appearance
@@ -394,12 +474,13 @@ def detailansicht():
 
 
         #------------------------INPUTS---------------------------------------------------------------------
-
+        
         if assignment_description==[]:
             assignment_description = ""
         else:
             assignment_description = assignment_description[0][0]
         #input for assignment description
+            
         st.text_area(label="Aufgabenbeschreibung", placeholder="Aufgabenbeschreibung", help="Bitte hier die Aufgabenbeschreibung eingeben", key="key_assignment_description_input", value=assignment_description)
 
 

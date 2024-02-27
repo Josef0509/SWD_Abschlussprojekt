@@ -22,7 +22,7 @@ def install():
     'cd ./SWD_Abschlussprojekt',
     'python -m venv venv',
     './venv/Scripts/activate',
-    'pip install streamlit st_pages matplotlib',
+    'pip install streamlit st_pages matplotlib pdfkit reportlab',
     f'New-Item -ItemType SymbolicLink -Path "{desktop_pfad}\ObSt.lnk" -Target {install_directory+"/SWD_Abschlussprojekt/Run.exe"}',
     f'echo {install_directory} > config.txt',  # Create config.txt with input_directory
     #schreibe auch die gemachten Schritte in die config.txt
