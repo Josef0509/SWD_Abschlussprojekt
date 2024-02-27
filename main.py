@@ -45,22 +45,33 @@ def main():
     stp.show_pages(pages)
     
 
-def login_pressed(name:str, password:str):
+def login_pressed(name:str, password:str, token:str):
     # Load the credentials from the database
     db = DB()
     db_usernames, db_passwords = db.get_credentials()
     
     # Get the hexadecimal representation of the hashed password
     hashed_password = hash(password)
+    if token is not None:
+        hashed_token = hash(token)    
 
-    if name in db_usernames and hashed_password == db_passwords[db_usernames.index(name)]:
+    token_is_valid = False
+
+    if db.get_session_token() is None or db.get_session_token() == "":
+        if db.check_token(hashed_token):
+            token_is_valid = True
+            db.set_session_token(hashed_token)
+    else:
+        token_is_valid = True            
+
+    if name in db_usernames and hashed_password == db_passwords[db_usernames.index(name)] and token_is_valid:
         st.session_state.logged_in = True
         db.set_User_in_Session(name)
         db.__del__()
         logging.info(f"User {name} logged in.")
         
     else:
-        st.error("The name or password you entered is incorrect.")
+        st.error("The credentials you entered are incorrect.")
 
 def login():
     st.title("Login Page")
@@ -68,8 +79,16 @@ def login():
     #ABGABE: Username und  PW für Julian und Matthias anzeigen
     name = st.text_input("Name")
     password = st.text_input("Password", type="password")
-    st.button("Login", on_click=lambda: login_pressed(name, password))
-    
+
+    db = DB()
+
+    if db.get_session_token() is None or db.get_session_token() == "":
+        token = st.text_input("Token")
+
+        st.button("Programm aktivieren", on_click=lambda: login_pressed(name, password, token))
+    else:
+        st.button("Login", on_click=lambda: login_pressed(name, password, None))
+    db.__del__()
     
 # Initialize session state
 if "logged_in" not in st.session_state:

@@ -50,8 +50,28 @@ class DB:
 
     #is used to store username and hashed password in the database
     def save_credentials(self, username:str, password:str):
-        self.query("INSERT INTO Credentials (username, password) VALUES (?, ?)", (username, password))
+        self.query("INSERT INTO UserData (username, password) VALUES (?, ?)", (username, password))
         
+    #is used to store the hashed tokens in the database, which are used to verify the user
+    def save_tokenHash(self, hash:str):
+        self.query("INSERT INTO TokenHash (hashedToken) VALUES (?)", (hash,))
+
+    #returns returns the token in use
+    def get_session_token(self):
+        token = self.query("SELECT token FROM 'Session'")
+        token = token[0][0] if token and token[0] else None
+        return token
+    
+    #checks if the given token is in the database
+    def check_token(self, hashed_token:str):
+        token = self.query("SELECT hashedToken FROM TokenHash WHERE hashedToken = ?", (hashed_token,))
+        token = token[0][0] if token and token[0] else None
+        return True if token else False
+    
+    #is used to set the token in use
+    def set_session_token(self, hashed_token:str):
+        self.query("UPDATE 'Session' SET token = ?", (hashed_token,))
+
     #is used to get the credentials from the database
     def get_credentials(self):
         credentials = self.query("SELECT * FROM userData")

@@ -3,8 +3,8 @@ from db import DB
 from encode import hash
 
 
-usernames = ["sstr"]
-passwords = ["sa"]  #make sure to get rid of the actual password after running this script
+usernames = ["pm", "jh"]
+passwords = ["pm", "jh"]  #make sure to get rid of the actual password after running this script
 
 
 # Save the hashed passwords to the db
