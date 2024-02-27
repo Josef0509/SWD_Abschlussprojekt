@@ -116,36 +116,31 @@ def uebersicht():
     for book in c_books:
         # Get grades for the current book
         grades = selected_kid.get_grades_with_bookID(book.get_ID())
-        weights = selected_kid.get_weights_with_bookID(book.get_ID())
+        weights = selected_kid.get_weights_with_bookID(book.get_ID())   
 
-        ap = []
-        pp = []
-
-        grades_percentage = []
+        corr_grades = []
+        corr_weights = []
         for i,grade in enumerate(grades):
-            percentage = gradeTOPercentage(grade)
-            if type(percentage) == float or type(percentage) == int:
-                grades_percentage.append(percentage)
-                ap.append(percentage/100*weights[i])
-                pp.append(weights[i])
-            else:
-                pass    #ignore K's
+            try:
+                grade = float(grade)
+                corr_grades.append(grade)
+                corr_weights.append(weights[i])
+            except ValueError:
+                pass   #ignore K's
 
-        possible_points = sum(pp)
-        achieved_points = sum(ap)
-
+        product = [a*b for a,b in zip(corr_grades,corr_weights)]
         # Assign grades to the dictionary with the book name as the key
-        grade_data[book.get_name()] = grades_percentage
+        grade_data[book.get_name()] = corr_grades
 
         try:
-            percentage = achieved_points*100/possible_points
+            acc_grade = sum(product)/sum(corr_weights)
         except ZeroDivisionError:
-            percentage = 0
+            acc_grade = 0
 
         if grades != []:
-            container.write(F"**Fach:** {book.get_name()}: **Note: {np.round(percentageTOGrade(percentage),3)}**  [{possible_points} / {achieved_points} Punkten erreicht = {np.round(percentage,2)}%]")
+            container.write(F"**Fach:** {book.get_name()}: **Note: {np.round(acc_grade,3)}**")
         else:
-            container.write(F"**Fach:** {book.get_name()}: **Note: -**")      
+            container.write(F"**Fach:** {book.get_name()}: **keine Noten vorhanden**")      
 
     #fill the dictionary with the same length#
     max_len = max([len(grade_data[book]) for book in grade_data])
