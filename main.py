@@ -49,49 +49,52 @@ def login_pressed(name:str, password:str, token:str):
     # Load the credentials from the database
     db = DB()
     db_usernames, db_passwords = db.get_credentials()
-    
-    # Get the hexadecimal representation of the hashed password
+
     hashed_password = hash(password)
     hashed_token = None
-    if token != None:
-        hashed_token = hash(token)    
 
-    token_is_valid_now = False
-    token_was_valid_before = False
-
-    if db.get_session_token() is None or db.get_session_token() == "":
-        if db.check_token(hashed_token):
-            token_is_valid_now = True           
-    else:
-        token_was_valid_before = True            
-    
-
-    if name in db_usernames and hashed_password == db_passwords[db_usernames.index(name)]:
-
-        if token_is_valid_now or token_was_valid_before: 
+    if token == None: #login
+        if name in db_usernames and hashed_password == db_passwords[db_usernames.index(name)]:        
             st.session_state.logged_in = True
             db.set_UserToken_inSession(name, hashed_token)
             db.__del__()
-            logging.info(f"User {name} logged in.")
-        
-    else:
-        st.error("The credentials you entered are incorrect.")
+            logging.info(f"User {name} logged in.")     
+        else:
+            st.error("The credentials you entered are incorrect.")
+
+    else:   #register
+        hashed_token = hash(token)   
+        if db.check_token(hashed_token):
+            if name not in db_usernames:
+                db.save_credentials(name, hashed_password)
+                logging.info(f"User {name} registered.")
+                st.session_state.logged_in = True
+                db.set_UserToken_inSession(name, hashed_token)
+
+                db.__del__()
+            else:
+                st.error("The username is already in use.")
+
 
 def login():
-    st.title("Login Page")
-    # Insert a form
-    #ABGABE: Username und  PW für Julian und Matthias anzeigen
-    name = st.text_input("Name")
-    password = st.text_input("Password", type="password")
-
     db = DB()
 
     if db.get_session_token() is None or db.get_session_token() == "":
+        st.title("Register Page")
+
+        name = st.text_input("Name")
+        password = st.text_input("Password", type="password")
         token = st.text_input("Token")
 
         st.button("Programm aktivieren", on_click=lambda: login_pressed(name, password, token))
+
     else:
+        st.title("Login Page")
+        name = st.text_input("Name")
+        password = st.text_input("Password", type="password")
+
         st.button("Login", on_click=lambda: login_pressed(name, password, None))
+
     db.__del__()
     
 # Initialize session state
