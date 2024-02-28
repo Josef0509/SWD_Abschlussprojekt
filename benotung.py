@@ -538,122 +538,125 @@ def detailansicht():
             st.write("Fehler beim Laden der Aufgaben!")
             
 
+        if assignment_ID: #if the page exists
+
+            try:
+                #get the grade, comment, weight and date of the selected page
+
+                assignment_description = db.query("SELECT description FROM Assignment WHERE assignmentID = ?", (assignment_ID,))
+
+                grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id,assignment_ID))
+                
+                comment_result = db.query("SELECT comment FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
+                
+                weight_result = db.query("SELECT weight FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
+                
+                date_result = db.query("SELECT date FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
+            except Exception as e:
+                logging.exception('Fehler beim Laden der Noten, Kommentare usw.!')
+                st.write("Fehler beim Laden der Noten, Kommentare usw.!")
+        
+
+            #visual appearance
+            st.divider()
+            st.header("Eingabe der Details:")
 
 
-        try:
-            #get the grade, comment, weight and date of the selected page
-
-            assignment_description = db.query("SELECT description FROM Assignment WHERE assignmentID = ?", (assignment_ID,))
-
-            grade_result = db.query("SELECT grade FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id,assignment_ID))
             
-            comment_result = db.query("SELECT comment FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
+            #------------------------INPUTS---------------------------------------------------------------------
             
-            weight_result = db.query("SELECT weight FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
+            if assignment_description==[]:
+                assignment_description = ""
+            else:
+                assignment_description = assignment_description[0][0]
+            #input for assignment description
+                
+            st.text_area(label="Aufgabenbeschreibung", placeholder="Aufgabenbeschreibung", help="Bitte hier die Aufgabenbeschreibung eingeben", key="key_assignment_description_input", value=assignment_description)
+
+
+
+            #if no grade is present, set grade_result to 1
+            if grade_result==[]:
+                grade_result = "1"
+            else:
+                grade_result = grade_result[0][0]
+            #input for grade
             
-            date_result = db.query("SELECT date FROM Grade WHERE kidID = ? AND bookID = ? AND assignmentID = ?", (kid_id, book_id, assignment_ID))
-        except Exception as e:
-            logging.exception('Fehler beim Laden der Noten, Kommentare usw.!')
-            st.write("Fehler beim Laden der Noten, Kommentare usw.!")
-        
+            st.toggle(label="Krank", key="key_K_input", value=False, help="Klicken Sie hier wenn das Kind krank war!")
 
-        #visual appearance
-        st.divider()
-        st.header("Eingabe der Details:")
-
-
-
-        #------------------------INPUTS---------------------------------------------------------------------
-        
-        if assignment_description==[]:
-            assignment_description = ""
-        else:
-            assignment_description = assignment_description[0][0]
-        #input for assignment description
+            if st.session_state.key_K_input == False:
+                if grade_result == "K":
+                    grade_result = 1
+                st.number_input(label = "Note", key="key_grade_input", value=int(grade_result), placeholder="Note", help="Bitte hier die Note eintragen!", step=1, min_value=1, max_value=5)
+                grade_input = st.session_state.key_grade_input
+            else:
+                #st.session_state.key_K_input == False:
+                grade_input = "K"
             
-        st.text_area(label="Aufgabenbeschreibung", placeholder="Aufgabenbeschreibung", help="Bitte hier die Aufgabenbeschreibung eingeben", key="key_assignment_description_input", value=assignment_description)
-
-
-
-        #if no grade is present, set grade_result to 1
-        if grade_result==[]:
-            grade_result = "1"
-        else:
-            grade_result = grade_result[0][0]
-        #input for grade
-        
-        st.toggle(label="Krank", key="key_K_input", value=False, help="Klicken Sie hier wenn das Kind krank war!")
-
-        if st.session_state.key_K_input == False:
-            if grade_result == "K":
-                grade_result = 1
-            st.number_input(label = "Note", key="key_grade_input", value=int(grade_result), placeholder="Note", help="Bitte hier die Note eintragen!", step=1, min_value=1, max_value=5)
-            grade_input = st.session_state.key_grade_input
-        else:
-            #st.session_state.key_K_input == False:
-            grade_input = "K"
-        
-        
-        
-        #if no comment is present, set comment_result to None
-        if comment_result==[]:
-            comment_result = ""
-        else:
-            comment_result = comment_result[0][0]
-        #input for comment
-        st.text_area(label="Kommentar", placeholder="Kommentar", help="Bitte hier ihren Kommentar eingeben", key="key_comment_input",value=comment_result)
-        
-
-        #if no weight is present, set weight_result to 0.0
-        if weight_result==[]:
-            weight_result = 100
-        else:
-            weight_result = weight_result[0][0]
-        #input for weight
             
-    
-        if st.session_state.key_K_input == True:
-            st.write(F"Das Kind war krank: Die Aufgabe fließt nicht in die Benotung.")
-            weight_input = 999
+            
+            #if no comment is present, set comment_result to None
+            if comment_result==[]:
+                comment_result = ""
+            else:
+                comment_result = comment_result[0][0]
+            #input for comment
+            st.text_area(label="Kommentar", placeholder="Kommentar", help="Bitte hier ihren Kommentar eingeben", key="key_comment_input",value=comment_result)
+            
 
-        else:
-            if weight_result == 999:
+            #if no weight is present, set weight_result to 0.0
+            if weight_result==[]:
                 weight_result = 100
-            st.slider(label="Gewichtung/Maximale Punkte", key="key_weight_input", value=weight_result, min_value=50, max_value=150, step=50, help="Bitte hier die Gewichtung eintragen! [**Leicht:** 50, **Normal:** 100, **Schwer:** 150] Diese entspricht der maximal erreichbaren Punkteanzahl.")
-            st.write(F"Das Kind bekommt **{gradeTOPercentage(st.session_state.key_grade_input)/100*st.session_state.key_weight_input}** Punkte gutgeschrieben.")
-            weight_input = st.session_state.key_weight_input
+            else:
+                weight_result = weight_result[0][0]
+            #input for weight
+                
+        
+            if st.session_state.key_K_input == True:
+                st.write(F"Das Kind war krank: Die Aufgabe fließt nicht in die Benotung.")
+                weight_input = 999
 
-        #if no date is present, set date_result to today's date
-        if date_result == []:
-            date_result = datetime.date.today()
+            else:
+                if weight_result == 999:
+                    weight_result = 100
+                st.slider(label="Gewichtung/Maximale Punkte", key="key_weight_input", value=weight_result, min_value=50, max_value=150, step=50, help="Bitte hier die Gewichtung eintragen! [**Leicht:** 50, **Normal:** 100, **Schwer:** 150] Diese entspricht der maximal erreichbaren Punkteanzahl.")
+                st.write(F"Das Kind bekommt **{gradeTOPercentage(st.session_state.key_grade_input)/100*st.session_state.key_weight_input}** Punkte gutgeschrieben.")
+                weight_input = st.session_state.key_weight_input
+
+            #if no date is present, set date_result to today's date
+            if date_result == []:
+                date_result = datetime.date.today()
+
+            else:
+                # Extract the date string from the tuple
+                date_result = date_result[0][0]
+                date_string = date_result
+                # Convert the date string to a datetime.date object
+                date_result = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
+
+            #input for date
+            st.date_input(label="Datum", help="Bitte hier das Datum eingeben", key="key_date_input", value=date_result)
+
+
+            #------------------------BUTTONS---------------------------------------------------------------------
+            #buttons for saving, updating and deleting the grade
+            button_col1, button_col2, button_col3 = st.columns([0.3, 1, 1])
+
+
+            if button_col1.button("Speichern", help="Klicken Sie hier um die Note zu speichern!"):
+                db.update_or_save_grade(kid_id, book_id, assignment_ID, grade_input, st.session_state.key_comment_input, weight_input, st.session_state.key_date_input, st.session_state.key_assignment_description_input)
+                #seite neu laden
+                st.experimental_rerun()
+                
+
+            if button_col2.button("Löschen", help="Klicken Sie hier um die Note zu löschen!"):
+                db.delete_grade(kid_id, book_id, assignment_ID)
+                #seite neu laden
+                st.experimental_rerun()
+
 
         else:
-            # Extract the date string from the tuple
-            date_result = date_result[0][0]
-            date_string = date_result
-            # Convert the date string to a datetime.date object
-            date_result = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
-
-        #input for date
-        st.date_input(label="Datum", help="Bitte hier das Datum eingeben", key="key_date_input", value=date_result)
-
-
-        #------------------------BUTTONS---------------------------------------------------------------------
-        #buttons for saving, updating and deleting the grade
-        button_col1, button_col2, button_col3 = st.columns([0.3, 1, 1])
-
-
-        if button_col1.button("Speichern", help="Klicken Sie hier um die Note zu speichern!"):
-            db.update_or_save_grade(kid_id, book_id, assignment_ID, grade_input, st.session_state.key_comment_input, weight_input, st.session_state.key_date_input, st.session_state.key_assignment_description_input)
-            #seite neu laden
-            st.experimental_rerun()
-            
-
-        if button_col2.button("Löschen", help="Klicken Sie hier um die Note zu löschen!"):
-            db.delete_grade(kid_id, book_id, assignment_ID)
-            #seite neu laden
-            st.experimental_rerun()
-
+            st.error("Die Seite existiert noch nicht. Sie müssen zuerst die Seite hinzufügen.")
         db.__del__()
 
 
