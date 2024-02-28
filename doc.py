@@ -8,7 +8,7 @@ st.title(":page_with_curl:"+" Dokumentation")
 st.header("Haftungsausschluss")
 st.markdown(
     """
-    Die Notensoftware befindet sich in der Version 1.0.0 und wurde von ObSt entwickelt. 
+    Die Notensoftware VSGrade befindet sich in der Version 1.0.0 und wurde von ObSt entwickelt. 
     Es handelt sich um eine Beta-Version und daher können noch Fehler auftreten. 
     ObSt übernimmt keine Haftung für Fehler, die durch die Verwendung der Software entstehen. 
     """

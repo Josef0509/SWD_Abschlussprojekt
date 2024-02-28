@@ -7,7 +7,7 @@ import logging
 
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
-st.set_page_config(layout="wide", page_title="Notensoftware", page_icon=":school:")
+st.set_page_config(layout="wide", page_title="VSGrade", page_icon=":school:")
 
 def main():
     st.markdown("""
@@ -52,23 +52,27 @@ def login_pressed(name:str, password:str, token:str):
     
     # Get the hexadecimal representation of the hashed password
     hashed_password = hash(password)
-    if token is not None:
+    hashed_token = None
+    if token != None:
         hashed_token = hash(token)    
 
-    token_is_valid = False
+    token_is_valid_now = False
+    token_was_valid_before = False
 
     if db.get_session_token() is None or db.get_session_token() == "":
         if db.check_token(hashed_token):
-            token_is_valid = True
-            db.set_session_token(hashed_token)
+            token_is_valid_now = True           
     else:
-        token_is_valid = True            
+        token_was_valid_before = True            
+    
 
-    if name in db_usernames and hashed_password == db_passwords[db_usernames.index(name)] and token_is_valid:
-        st.session_state.logged_in = True
-        db.set_User_in_Session(name)
-        db.__del__()
-        logging.info(f"User {name} logged in.")
+    if name in db_usernames and hashed_password == db_passwords[db_usernames.index(name)]:
+
+        if token_is_valid_now or token_was_valid_before: 
+            st.session_state.logged_in = True
+            db.set_UserToken_inSession(name, hashed_token)
+            db.__del__()
+            logging.info(f"User {name} logged in.")
         
     else:
         st.error("The credentials you entered are incorrect.")

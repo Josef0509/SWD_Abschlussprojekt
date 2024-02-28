@@ -67,10 +67,6 @@ class DB:
         token = self.query("SELECT hashedToken FROM TokenHash WHERE hashedToken = ?", (hashed_token,))
         token = token[0][0] if token and token[0] else None
         return True if token else False
-    
-    #is used to set the token in use
-    def set_session_token(self, hashed_token:str):
-        self.query("UPDATE 'Session' SET token = ?", (hashed_token,))
 
     #is used to get the credentials from the database
     def get_credentials(self):
@@ -79,8 +75,13 @@ class DB:
         passwords = [credential[1] for credential in credentials]
         return usernames, passwords
     
-    def set_User_in_Session(self, username:str):
-        self.query("UPDATE 'Session' SET activeUser = ?", (username,))
+    def set_UserToken_inSession(self, username:str, token:str = None):
+        if token == None:
+                self.query("UPDATE 'Session' SET activeUser = ?", (username,))
+        else:           
+            self.query("INSERT INTO 'Session' (activeUser, token) VALUES (?, ?)", (username,token))
+
+
 
     def get_User_in_Session(self):
         username = self.query("SELECT activeUser FROM 'Session'")
