@@ -24,10 +24,8 @@ Wenn Sie diese als Admin ausführen und angeben wohin Sie das Programm installie
 
 ### Credentials für Lektoren PM und JH
 #### PM: 
-User: "PM"  
-PW: "PM"  
+Username und PW: Selber generieren beim ersten Start
 Token: "caMVpP0hV0" nur beim ersten Start  
 #### JH:
-User: "JH"  
-PW: "JH"  
+Username und PW: Selber generieren beim ersten Start
 Token: "SEStp7UTPN" nur beim ersten Start  
