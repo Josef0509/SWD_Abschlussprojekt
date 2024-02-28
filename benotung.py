@@ -257,7 +257,6 @@ def uebersicht():
         try:
             if st.button("Export all to CSV", help="Klicken Sie hier um die Daten als CSV zu exportieren!"):
 
-
                 selected_book = selected_book.get_name()
                 time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -268,13 +267,7 @@ def uebersicht():
                 st.experimental_rerun()
         except Exception as e:
             logging.exception('Fehler beim Exportieren als CSV!')
-            st.write("Fehler beim Exportieren als CSV!")
-
-        
-       
-
-        
-        
+            st.write("Fehler beim Exportieren als CSV!")        
 
         try:
             if st.button("Export all to PDF", help="Klicken Sie hier um die Daten als PDF zu exportieren!"):
@@ -312,6 +305,103 @@ def uebersicht():
         except Exception as e:
             st.exception('Fehler beim Exportieren als PDF!')
             st.write("Fehler beim Exportieren als PDF!")
+
+        try:
+            if st.button("Export Endnoten", help="Klicken Sie hier um die Endjahresnoten als PDF zu exportieren!"):
+                db = DB()
+                kids = db.load_kids()    
+                books = db.load_books()
+                db.__del__()
+
+                c_books = []
+                for book in books:
+                    c_books.append(Book(book))
+
+                c_kids = []
+                for kid in kids:
+                    kind = Kid(kid.split(" ")[0], kid.split(" ")[1])
+                    c_kids.append(kind)
+                
+                grade_data = {}
+
+                for book in c_books:
+                    book_grades = {}
+                    for kid in c_kids:
+                        # Get grades for the current book
+                        grades = kid.get_grades_with_bookID(book.get_ID())
+                        weights = kid.get_weights_with_bookID(book.get_ID())   
+
+                        corr_grades = []
+                        corr_weights = []
+                        for i,grade in enumerate(grades):
+                            try:
+                                grade = float(grade)
+                                corr_grades.append(grade)
+                                corr_weights.append(weights[i])
+                            except ValueError:
+                                pass   #ignore K's
+
+                        product = [a*b for a,b in zip(corr_grades,corr_weights)]
+
+                        try:
+                            acc_grade = sum(product)/sum(corr_weights)
+                        except ZeroDivisionError:
+                            acc_grade = 0
+
+                        if grades != []:
+                            book_grades[kid.get_name()] = np.round(acc_grade,3)
+                        else:
+                            book_grades[kid.get_name()] = "n.v."
+
+                    grade_data[book.get_name()] = book_grades     
+
+                #print(grade_data)   
+
+                # Specify the file path for the PDF export
+                selected_book = list(grade_data.keys())[0]  # Assuming you want to start with the first subject
+                time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                output_pdf_path = os.path.join(file_path, f"Endnoten_{time}.pdf")
+                pdf = SimpleDocTemplate(output_pdf_path, pagesize=letter)
+
+                elements = []
+
+                for subject, grades in grade_data.items():
+                    
+                    title = Paragraph(f"<b>{subject}</b>", getSampleStyleSheet()['Title'])
+                    elements.append(title)
+
+                    # Convert the grades data into a list of lists for the Table
+                    table_data = [['Student', 'Grade']]
+                    for student, grade in grades.items():
+                        table_data.append([student, grade])
+
+                    # Create a table for the subject
+                    table = Table(table_data)
+
+                    # Define the style of the table
+                    table_style = TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                        # Add more styles as needed
+                    ])
+
+                    table.setStyle(table_style)
+                    
+                    # Include the table in the PDF
+                    elements.append(table)
+
+                # Build the PDF
+                pdf.build(elements)
+
+                st.success(f"Data successfully exported to {output_pdf_path}")
+
+        except Exception as e:
+            st.exception(F'Fehler beim Exportieren als PDF: {e}')
+            st.write("Fehler beim Exportieren als PDF!")
+
+
+        
+
 
 
 

@@ -16,6 +16,9 @@ class Kid:
         ans = bool(db.query("SELECT 1 FROM Kid WHERE firstname = ? AND lastname = ?", (self.firstname,self.lastname)))
         db.__del__()
         return ans
+    
+    def get_name(self):
+        return self.firstname +" "+ self.lastname
 
     def save_new_kid(self):
         db = DB()
