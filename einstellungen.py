@@ -99,6 +99,9 @@ st.markdown(
     Es werden immer nur die letzten 10 Backups behalten um Speicher zu sparen!
     """
 )
+if backup_loc is None or backup_loc == "":
+    backup_loc = os.path.join(os.path.expanduser("~"), "Desktop")
+    
 st.text_input("Backup-Ort", value=backup_loc, key="key_backup_loc", help="Geben Sie hier den absoluten Pfad zum Speichern des Backups ein. (zb: **C:\ Users\obwal\Desktop**)")
 
 st.button("Speichern", help="Speichert den Backup-Ort in der Datenbank.", on_click=speichern_clicked)
