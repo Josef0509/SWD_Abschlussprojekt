@@ -24,8 +24,17 @@ python -m venv venv
 ```bash
 pip install streamlit, st_pages, matplotlib, pdfkit, reportlab
 ```
+
+### 6 App Starten
+```bash
+streamlit run main.py
+```
+
 oder sich nur die Installation.exe downloaden.
 Wenn Sie diese als Admin ausführen und angeben wohin Sie das Programm installieren möchten, wird dorthin das Repository geklont. Anschließend wird dort ein venv erstellt und alle nötigen Packages installiert. Zuletzt wird eine Verknüpfung auf dem Desktop erstellt die Sie als Admin doppelklicken können um das Programm zu starten.
+
+### Erster Start des Programms
+Dann müssen Sie einen Usernamen und Passwort und einen Token eingeben. Diesen finden Sie unterhalb. Danach ist das Programm aktiviert und Sie brauchen sich nur noch mit ihrem Usernamen und dem gewählten Passwort anmelden.
 
 ### Credentials für Lektoren PM und JH
 #### PM: 
