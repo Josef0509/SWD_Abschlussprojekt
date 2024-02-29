@@ -5,17 +5,20 @@ Abschlussprojekt für Softwaredesign von Sandro Streicher und Josef Obwaller [Ob
 
 ## Installationsanleitung:
 Sie können entweder:
-### 1 Setting up VENV
+### 1 Repository Klonen
+https://github.com/Josef0509/SWD_Abschlussprojekt.git  
+
+### 2 Setting up VENV
 ```bash
 python -m venv venv
 ```
 
-### 2 Activating the VENV
+### 3 Activating the VENV
 ```bash
 .\venv\Scripts\activate
 ```
 
-### 3 Install packages
+### 4 Install packages
 ```bash
 pip install streamlit, st_pages, matplotlib, pdfkit, reportlab
 ```
