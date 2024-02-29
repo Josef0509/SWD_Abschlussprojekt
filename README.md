@@ -8,17 +8,19 @@ Sie können entweder:
 ### 1 Repository Klonen
 https://github.com/Josef0509/SWD_Abschlussprojekt.git  
 
-### 2 Setting up VENV
+### 2 Sicherstellen, dass Sie im Main Branch sind
+
+### 3 Setting up VENV
 ```bash
 python -m venv venv
 ```
 
-### 3 Activating the VENV
+### 4 Activating the VENV
 ```bash
 .\venv\Scripts\activate
 ```
 
-### 4 Install packages
+### 5 Install packages
 ```bash
 pip install streamlit, st_pages, matplotlib, pdfkit, reportlab
 ```
