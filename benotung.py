@@ -514,10 +514,6 @@ def detailansicht():
         #page selection, +1 for next page to grade
         selected_assignment_name = container.text_input(label="Seite auswählen", key="key_ausg_Seite", value=last_graded_page+1, placeholder="Seite", help="Bitte hier die Seite auswählen die Sie anzeigen wollen!")
         
-
-
-
-
         try:
             #get all assignment names of the selected book
             assignment_names = db.query("SELECT name FROM Assignment WHERE bookID = ?", (book_id,))
@@ -620,7 +616,7 @@ def detailansicht():
                 if weight_result == 999:
                     weight_result = 100
                 st.slider(label="Gewichtung/Maximale Punkte", key="key_weight_input", value=weight_result, min_value=50, max_value=150, step=50, help="Bitte hier die Gewichtung eintragen! [**Leicht:** 50, **Normal:** 100, **Schwer:** 150] Diese entspricht der maximal erreichbaren Punkteanzahl.")
-                st.write(F"Das Kind bekommt **{gradeTOPercentage(st.session_state.key_grade_input)/100*st.session_state.key_weight_input}** Punkte gutgeschrieben.")
+                st.write(F"Das Kind bekommt eine **{grade_input}** mit einer Gewichtung von **{weight_result}** gutgeschrieben.")
                 weight_input = st.session_state.key_weight_input
 
             #if no date is present, set date_result to today's date

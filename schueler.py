@@ -108,77 +108,80 @@ def uebersicht():
     for book in books:
         c_books.append(Book(book))
 
-    selected_kid = Kid(st.session_state.key_ausg_Kind.split(" ")[0], st.session_state.key_ausg_Kind.split(" ")[1])
+    if st.session_state.key_ausg_Kind != "" and st.session_state.key_ausg_Kind != None and st.session_state.key_ausg_Kind != []:
+        selected_kid = Kid(st.session_state.key_ausg_Kind.split(" ")[0], st.session_state.key_ausg_Kind.split(" ")[1])
 
-    grade_data = {}
+        grade_data = {}
 
-    # Iterate through each book
-    for book in c_books:
-        # Get grades for the current book
-        grades = selected_kid.get_grades_with_bookID(book.get_ID())
-        weights = selected_kid.get_weights_with_bookID(book.get_ID())   
+        # Iterate through each book
+        for book in c_books:
+            # Get grades for the current book
+            grades = selected_kid.get_grades_with_bookID(book.get_ID())
+            weights = selected_kid.get_weights_with_bookID(book.get_ID())   
 
-        corr_grades = []
-        corr_weights = []
-        for i,grade in enumerate(grades):
+            corr_grades = []
+            corr_weights = []
+            for i,grade in enumerate(grades):
+                try:
+                    grade = float(grade)
+                    corr_grades.append(grade)
+                    corr_weights.append(weights[i])
+                except ValueError:
+                    pass   #ignore K's
+
+            product = [a*b for a,b in zip(corr_grades,corr_weights)]
+            # Assign grades to the dictionary with the book name as the key
+            grade_data[book.get_name()] = corr_grades
+
             try:
-                grade = float(grade)
-                corr_grades.append(grade)
-                corr_weights.append(weights[i])
-            except ValueError:
-                pass   #ignore K's
+                acc_grade = sum(product)/sum(corr_weights)
+            except ZeroDivisionError:
+                acc_grade = 0
 
-        product = [a*b for a,b in zip(corr_grades,corr_weights)]
-        # Assign grades to the dictionary with the book name as the key
-        grade_data[book.get_name()] = corr_grades
+            if grades != []:
+                container.write(F"**Fach:** {book.get_name()}: **Note: {np.round(acc_grade,3)}**")
+            else:
+                container.write(F"**Fach:** {book.get_name()}: **keine Noten vorhanden**")      
 
-        try:
-            acc_grade = sum(product)/sum(corr_weights)
-        except ZeroDivisionError:
-            acc_grade = 0
+        #fill the dictionary with the same length#
+        max_len = max([len(grade_data[book]) for book in grade_data])
+        for book in grade_data:
+            while len(grade_data[book]) < max_len:
+                grade_data[book].append(None)
+        
 
-        if grades != []:
-            container.write(F"**Fach:** {book.get_name()}: **Note: {np.round(acc_grade,3)}**")
-        else:
-            container.write(F"**Fach:** {book.get_name()}: **keine Noten vorhanden**")      
+        # Create DataFrame from the dictionary
+        df = pd.DataFrame(grade_data)
 
-    #fill the dictionary with the same length#
-    max_len = max([len(grade_data[book]) for book in grade_data])
-    for book in grade_data:
-        while len(grade_data[book]) < max_len:
-            grade_data[book].append(None)
-    
+        container.line_chart(df)
 
-    # Create DataFrame from the dictionary
-    df = pd.DataFrame(grade_data)
+        # Create the line chart
+        plt.figure(figsize=(10, 6))
+        plt.plot(df)
+        plt.xlabel('Index')
+        plt.ylabel('Values')
+        plt.title(f'Notenübersicht: {st.session_state.key_ausg_Kind.split(" ")[0]} {st.session_state.key_ausg_Kind.split(" ")[1]}')
+        plt.legend(df.columns, loc='upper right')
 
-    container.line_chart(df)
+        # Export the chart to PDF
+        plt.savefig('Notenuebersicht.pdf')
 
-    # Create the line chart
-    plt.figure(figsize=(10, 6))
-    plt.plot(df)
-    plt.xlabel('Index')
-    plt.ylabel('Values')
-    plt.title(f'Notenübersicht: {st.session_state.key_ausg_Kind.split(" ")[0]} {st.session_state.key_ausg_Kind.split(" ")[1]}')
-    plt.legend(df.columns, loc='upper right')
+        # Provide download button for the PDF
+        container.download_button(
+            label="Chart Exportieren",
+            data=open('Notenuebersicht.pdf', 'rb').read(),
+            file_name='Notenuebersicht.pdf',
+            mime='application/pdf',
+        )
 
-    # Export the chart to PDF
-    plt.savefig('Notenuebersicht.pdf')
+        notizen_aus_DB = selected_kid.get_textfield()
 
-    # Provide download button for the PDF
-    container.download_button(
-        label="Chart Exportieren",
-        data=open('Notenuebersicht.pdf', 'rb').read(),
-        file_name='Notenuebersicht.pdf',
-        mime='application/pdf',
-    )
+        container.text_area(label="Notizen", key="key_notizen", value=notizen_aus_DB, help="Hier können Sie Notizen zu dem Kind machen!")
 
-    notizen_aus_DB = selected_kid.get_textfield()
+        container.button(label="Notizen speichern", on_click=button_notizen_speichern_clicked, help="Klicken Sie hier um die Notizen zu speichern!")
 
-    container.text_area(label="Notizen", key="key_notizen", value=notizen_aus_DB, help="Hier können Sie Notizen zu dem Kind machen!")
-
-    container.button(label="Notizen speichern", on_click=button_notizen_speichern_clicked, help="Klicken Sie hier um die Notizen zu speichern!")
-
+    else:
+        container.write("Die Anzeige kann nur erfolgen, wenn ein Kind ausgewählt wurde!")
 
 def anlegen():
     container.text_input(label="Vorname", key="key_vorname_schueler", placeholder="Vorname des Kindes", help="Bitte hier den Vornamen des Kindes eingeben das Sie anlegen wollen!")

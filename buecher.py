@@ -95,9 +95,13 @@ def bearbeiten():
     container.text_input(label="Name", key="key_name_neu", placeholder="neuer Name des Buches", value=st.session_state.key_ausg_buch, help="Bitte hier den neuen Namen des Buches eingeben!")
 
     #load the book data from the selected book
-    book_data = db.load_book_data(st.session_state.key_ausg_buch)
-    seitenanz_aus_DB = book_data[0][2]
-    autonum_aus_DB = book_data[0][3]
+    if buecher != []:
+        book_data = db.load_book_data(st.session_state.key_ausg_buch)
+        seitenanz_aus_DB = book_data[0][2]
+        autonum_aus_DB = book_data[0][3]
+    else:
+        seitenanz_aus_DB = 0
+        autonum_aus_DB = False
 
     #fill the inputs with data from the database
     container.number_input(label="Seitenanzahl", key="key_seitenanzahl_neu", value=seitenanz_aus_DB, placeholder="neue Seitenanzahl", help="Bitte hier die neue Seitenanzahl des Buches eingeben!", step=1, min_value=0)

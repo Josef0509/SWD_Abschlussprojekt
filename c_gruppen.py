@@ -35,4 +35,7 @@ class Group:
         db = DB()
         ans = db.query("SELECT groupID FROM 'Group' WHERE groupname = ?", (self.name,))
         db.__del__()
-        return ans[0][0]
+        if ans == []:
+            return None
+        else:
+            return ans[0][0]
