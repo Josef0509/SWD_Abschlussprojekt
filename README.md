@@ -31,7 +31,7 @@ streamlit run main.py
 ```
 
 oder sich nur die Installation.exe downloaden.
-Wenn Sie diese als Admin ausführen und angeben wohin Sie das Programm installieren möchten, wird dorthin das Repository geklont. Anschließend wird dort ein venv erstellt und alle nötigen Packages installiert. Zuletzt wird eine Verknüpfung auf dem Desktop erstellt die Sie als Admin doppelklicken können um das Programm zu starten.
+Wenn Sie diese als Admin ausführen und angeben wohin Sie das Programm installieren möchten, wird dorthin das Repository geklont. Es kann sein, dass Sie entweder von Windows Defender oder andere Anti Vieren Programmen gewarnt werden. Führen Sie die Anwendung bitte trotzdem aus, Sie können uns vertrauen :). Anschließend wird dort ein venv erstellt und alle nötigen Packages installiert. Zuletzt wird eine Verknüpfung auf dem Desktop erstellt die Sie als Admin doppelklicken können um das Programm zu starten.
 
 ### Erster Start des Programms
 Dann müssen Sie einen Usernamen und Passwort und einen Token eingeben. Diesen finden Sie unterhalb. Danach ist das Programm aktiviert und Sie brauchen sich nur noch mit ihrem Usernamen und dem gewählten Passwort anmelden.
